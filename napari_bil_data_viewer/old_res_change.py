@@ -13,29 +13,33 @@ from .reader import ims_reader
 import dask.array as da
 from typing import List
 from napari.layers import Image
+from dataset_info import get_datasets
 
+import fsspec, requests
+from bs4 import BeautifulSoup
+from skimage import io
+import dask.array as da
+from dask import delayed
+# import numpy as np
+import napari
 
-
-@magic_factory(auto_call=False,call_button="update",
-                lowest_resolution_level={'min': 0,'max': 9,
-                                  'tooltip':'''Important only for 3D rendering.  
-                                  Higher number is lower resolution.'''
-                                  }
+@magic_factory(auto_call=False,call_button="Load Dataset",
+                dataset={"choices": [key for key in get_datasets()]}
                 )
-def resolution_change(
+
+
+
+def load_bil_data(
     viewer: napari.Viewer,
-    lowest_resolution_level: int
+    dataset: str
 ) -> 'napari.types.LayerDataTuple':
     
     ''' 
-    This panel provides a tool for reloading the IMS data after selecting
-    the lowest resolution level that will be included in the multiscale series.
-    Higher numbers (ie higher on the pyramid) = lower resolution.  
-    
-    This is important for 3D rendering.  If one prefers higher resolution
-    3D rendering, they can choose a lower number, update the viewer, then
-    selecting 3D rendering.
+    This panel provides a tool for load pre-determined datasets from BIL
+    data currently available via http
     '''
+    
+    
     
     ## Load data for IMS file using the loader function
     for idx in viewer.layers:
@@ -99,5 +103,5 @@ def resolution_change(
 
 @napari_hook_implementation
 def napari_experimental_provide_dock_widget():
-    return resolution_change
+    return load_bil_data
 
