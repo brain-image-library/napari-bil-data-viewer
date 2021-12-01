@@ -37,7 +37,7 @@ def load_bil_data(
     
     dataset_info = get_datasets()[dataset]
     
-    bilData = dataset_info['url'][0]
+    bilData = dataset_info['url']
     ext = 'tif'
 
     def getFilesHttp(url: str,ext: str) -> list:
@@ -58,21 +58,25 @@ def load_bil_data(
             print('Reading {} \n'.format(f))
             return io.imread(f)
 
-    images = sorted(getFilesHttp(bilData, ext))
-    images = [fsspec.open(x,'rb') for x in images]
-
-    sampleImage = getImage(images[0])
-
-    images = [delayed(getImage)(x) for x in images]
-    images = [da.from_delayed(x, sampleImage.shape,dtype=sampleImage.dtype) for x in images]
-    images = da.stack(images)
+    
+    data = []
+    for ii in bilData:
+        images = sorted(getFilesHttp(ii, ext))
+        images = [fsspec.open(x,'rb') for x in images]
+    
+        sampleImage = getImage(images[0])
+    
+        images = [delayed(getImage)(x) for x in images]
+        images = [da.from_delayed(x, sampleImage.shape,dtype=sampleImage.dtype) for x in images]
+        images = da.stack(images)
+        data.append(images)
     
     
     name = dataset
     scale = dataset_info['scale']
     multiscale = True if len(dataset_info['url']) > 1 else False
     contrast_limits = dataset_info['contrast_limits']
-    data = images
+    data = data if len(data)>1 else data[0]
     
     meta = {
         'name':name,

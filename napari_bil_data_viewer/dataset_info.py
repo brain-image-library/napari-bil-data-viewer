@@ -18,11 +18,22 @@ def get_datasets():
     '''
     
     datasets = {
+        '2bdaf9e66a246844_multi':{
+            'url':[
+                # 'https://download.brainimagelibrary.org/2b/da/2bdaf9e66a246844/mouseID_405429-182725/CH1/',
+                   'https://download.brainimagelibrary.org/2b/da/2bdaf9e66a246844/mouseID_405429-182725/CH1_0.35_100um/',
+                   'https://download.brainimagelibrary.org/2b/da/2bdaf9e66a246844/mouseID_405429-182725/CH1_3.5_100um/'],
+            'scale':(100,0.35,0.35),
+            'contrast_limits':[0,65535]
+            },
+        
+        
         '2bdaf9e66a246844':{
             'url':['https://download.brainimagelibrary.org/2b/da/2bdaf9e66a246844/mouseID_405429-182725/CH1_3.5_100um/'],
             'scale':(100,3.5,3.5),
             'contrast_limits':[0,65535]
             }
+        
         
         }
         
