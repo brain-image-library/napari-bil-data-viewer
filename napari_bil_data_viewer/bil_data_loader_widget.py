@@ -5,22 +5,19 @@ Created on Sun Oct 24 16:49:37 2021
 @author: alpha
 """
 
-import napari, os
+import napari
 from magicgui import magic_factory
 from napari_plugin_engine import napari_hook_implementation
-# from .h5layer import layerH5
 import dask.array as da
-from napari.layers import Image
-from .dataset_info import get_datasets
-
+# from napari.layers import Image
 import fsspec, requests
 from bs4 import BeautifulSoup
 from skimage import io
 from dask import delayed
-# import numpy as np
+from .dataset_info import get_datasets
 
 @magic_factory(auto_call=False,call_button="Load Dataset",
-                dataset={"choices": [key for key in get_datasets()]}
+                dataset={"choices": sorted([key for key in get_datasets()])}
                 )
 
 
@@ -63,13 +60,17 @@ def load_bil_data(
     for ii in bilData:
         images = sorted(getFilesHttp(ii, ext))
         images = [fsspec.open(x,'rb') for x in images]
+        data.append(images)
     
-        sampleImage = getImage(images[0])
     
-        images = [delayed(getImage)(x) for x in images]
+
+    for idx,ii in enumerate(data):
+        sampleImage = getImage(ii[0])
+        images = [delayed(getImage)(x) for x in ii]
         images = [da.from_delayed(x, sampleImage.shape,dtype=sampleImage.dtype) for x in images]
         images = da.stack(images)
-        data.append(images)
+        data[idx] = images
+    
     
     
     name = dataset
@@ -89,14 +90,8 @@ def load_bil_data(
         }
         
         
-        
-    # napari.view_image(images, meta=meta)
-        
     
     return (data,meta,'image')
-
-    # # napari.view_image(images, metadata={'scale':(100,3.5,3.5)})
-    # napari.view_image(images, name=bilData.split('/')[-2],scale=(100.0,3.5,3.5))
     
 
 
