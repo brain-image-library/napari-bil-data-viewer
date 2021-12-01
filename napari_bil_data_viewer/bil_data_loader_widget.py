@@ -35,7 +35,9 @@ def load_bil_data(
     data currently available via http
     '''
     
-    bilData = get_datasets()[dataset]
+    dataset_info = get_datasets()[dataset]
+    
+    bilData = dataset_info['url'][0]
     ext = 'tif'
 
     def getFilesHttp(url: str,ext: str) -> list:
@@ -66,10 +68,10 @@ def load_bil_data(
     images = da.stack(images)
     
     
-    name = bilData.split('/')[-2]
-    scale = (100.0,3.5,3.5)
-    multiscale = False
-    contrast_limits = [0,65535]
+    name = dataset
+    scale = dataset_info['scale']
+    multiscale = True if len(dataset_info['url']) > 1 else False
+    contrast_limits = dataset_info['contrast_limits']
     data = images
     
     meta = {
