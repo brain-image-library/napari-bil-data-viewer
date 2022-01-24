@@ -29,10 +29,7 @@ def load_bil_data(
     
     ''' 
     This panel provides a tool for load pre-determined datasets from BIL
-    data currently available via https://download.brainimagelibrary.org/
-    
-    Current datasets are fMOST modality which included multi-resolution single-color
-    projections.
+    data currently available via http
     '''
     
     dataset_info = get_datasets()[dataset]

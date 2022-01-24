@@ -5,7 +5,7 @@ author = Alan M Watson
 author_email = alan.watson@pitt.edu
 url = https://github.com/brain-image-library/napari-bil-data-viewer
 license = BSD-3-Clause
-description = Napari plugin for viewing Brain Image Library datasets
+description = Napari plugin for viewing select Brain Image Library datasets
 long_description = file: README.md
 long_description_content_type = text/markdown
 classifiers =
@@ -31,8 +31,8 @@ python_requires = >=3.8
 setup_requires = setuptools_scm
 # add your package requirements here
 install_requires =
-    napari
     napari-plugin-engine>=0.1.4
+	napari[all]
 	fsspec
     requests
 	aiohttp
