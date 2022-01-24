@@ -4,7 +4,7 @@
 
 This plugin enables viewing of datasets archived in the Brain Image Library.  
 
-**NOTE: This plugin remains under early development.  Currently, only single color, fMOST datasets which include projections are available to view.  An example can be found here:  https://download.brainimagelibrary.org/2b/da/2bdaf9e66a246844/mouseID_405429-182725/
+**NOTE: This plugin is under early development.  Currently, only a subset of single color, fMOST datasets which include projections are available to view.  An example can be found here:  https://download.brainimagelibrary.org/2b/da/2bdaf9e66a246844/mouseID_405429-182725/
 
 
 
@@ -22,6 +22,7 @@ This plugin enables viewing of datasets archived in the Brain Image Library.
 
 ### Known Issues / limitations
 * Currently the only datasets that are available are those which have been manually selected by the developers.  If you would like a specific dataset to be included please consider adding the dataset(s) to the dataset_info.py file and submitting a pull request:  https://github.com/brain-image-library/napari-bil-data-viewer/blob/main/napari_bil_data_viewer/dataset_info.py
+* The plugin is still under development.  We appreciate all reports of errors which occur during use.  https://github.com/brain-image-library/napari-bil-data-viewer/issues
 
 
 ----------------------------------
@@ -50,7 +51,7 @@ Initial release.
 
 ## Contributing
 
-Contributions by the community are very welcome. Tests can be run with [tox], please ensure
+Please consider contributing to this project!  Tests can be run with [tox], please ensure
 the coverage at least stays the same before you submit a pull request.
 
 ## License
