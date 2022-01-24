@@ -4,6 +4,10 @@
 
 This plugin enables viewing of datasets archived in the Brain Image Library.  
 
+**https://www.brainimagelibrary.org/**
+
+
+
 **NOTE: This plugin is under early development.  Currently, only a subset of single color, fMOST datasets which include projections are available to view.  An example can be found here:  https://download.brainimagelibrary.org/2b/da/2bdaf9e66a246844/mouseID_405429-182725/
 
 
