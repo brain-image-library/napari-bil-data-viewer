@@ -6,7 +6,7 @@ except ImportError:
 
 
 from .bil_data_loader_widget import napari_experimental_provide_dock_widget
-from .dataset_info import get_datasets
+#from .dataset_info import get_datasets
 
 
 
