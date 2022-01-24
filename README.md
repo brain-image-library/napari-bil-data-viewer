@@ -43,9 +43,25 @@ https://napari.org/docs/plugins/index.html
 
 ## Installation
 
-You can install `napari-bil-data-viewer` via [pip]:
+Option #1: Install plugin via the napari plugin menu
 
+1. Menu: Plugins >> Install/Uninstall Plugins
+2. Search: napari-bil-data-viewer
+3. Select install
+
+
+
+Option #2:  Install a fresh python virtual environment
+
+    # Example of venv creation using conda
+    conda create -y -n bil-viewer python=3.8
+    conda activate bil-viewer
+    
+    # Install napari-bil-data-viewer
     pip install napari-bil-data-viewer
+    
+    # Run Napari
+    napari
 
 ## Change Log:
 
@@ -78,7 +94,7 @@ If you encounter any problems, please [file an issue] along with a detailed desc
 [Mozilla Public License 2.0]: https://www.mozilla.org/media/MPL/2.0/index.txt
 [cookiecutter-napari-plugin]: https://github.com/napari/cookiecutter-napari-plugin
 
-[file an issue]: https://github.com/AlanMWatson/napari-imaris-loader/issues
+[file an issue]: https://github.com/brain-image-library/napari-bil-data-viewer/issues
 
 [napari]: https://github.com/napari/napari
 [tox]: https://tox.readthedocs.io/en/latest/
