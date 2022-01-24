@@ -18,12 +18,12 @@ def get_datasets():
     '''
     
     datasets = {
-        'TEST_FULL_RES_ONLY_mouseID_405429-182725':{
-            'url':[
-                   'https://download.brainimagelibrary.org/2b/da/2bdaf9e66a246844/mouseID_405429-182725/CH1'],
-            'scale':(100,0.35,0.35),
-            'contrast_limits':[0,65535]
-            },
+#        'TEST_FULL_RES_ONLY_mouseID_405429-182725':{
+#            'url':[
+#                   'https://download.brainimagelibrary.org/2b/da/2bdaf9e66a246844/mouseID_405429-182725/CH1'],
+#            'scale':(100,0.35,0.35),
+#            'contrast_limits':[0,65535]
+#            },
         
         'mouseID_404421-182720':{
             'url':[
