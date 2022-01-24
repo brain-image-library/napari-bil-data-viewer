@@ -8,7 +8,9 @@ This plugin enables viewing of datasets archived in the Brain Image Library.
 
 
 
-![Plugin Demo]( "Plugin Demo")
+![Plugin Demo](https://imgur.com/gkDCsMd.gif "Plugin Demo")
+
+
 
 ### Features
 
