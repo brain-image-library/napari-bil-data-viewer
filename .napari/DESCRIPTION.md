@@ -1,7 +1,7 @@
-<p href="https://www.brainimagelibrary.org/" align="center" width="100%">
+<p href="https://www.brainimagelibrary.org/">
+    <align="center" width="100%">
     <img width="100%" src="https://i.imgur.com/ljZKq8h.png">
 </p>
-
 
 
 # Description
