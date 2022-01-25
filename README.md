@@ -2,31 +2,30 @@
 
 # Description
 
-This plugin enables viewing of datasets archived in the Brain Image Library.  
+### [<img src="https://i.imgur.com/9Yoy9Je.png" alt="gifs/BIL_logo.png" style="zoom: 25%;" />](https://www.brainimagelibrary.org/) **[Brain Image Library](https://www.brainimagelibrary.org/)**
 
-**https://www.brainimagelibrary.org/**
+#### This plugin enables viewing of datasets archived in the Brain Image Library.  
 
-
-
-**NOTE: This plugin is under early development.  Currently, only a subset of single color, fMOST datasets which include projections are available to view.  An example can be found here:  https://download.brainimagelibrary.org/2b/da/2bdaf9e66a246844/mouseID_405429-182725/
+**NOTE: This plugin is under early development.  Currently, only a subset of single color, fMOST datasets which include projections are available to view.  An example can be found [here]( https://download.brainimagelibrary.org/2b/da/2bdaf9e66a246844/mouseID_405429-182725/).
 
 
 
-![Plugin Demo](https://imgur.com/gkDCsMd.gif "Plugin Demo")
+![Plugin Demo GIF](https://imgur.com/gkDCsMd.gif "Plugin Demo GIF")
 
 
 
 ### Features
 
 * Multiscale Rendering
-  * Datasets which include multiple resolution representations of the data can be used for 
-  https://download.brainimagelibrary.org/2b/da/2bdaf9e66a246844/mouseID_405429-182725/
-* 3D rendering of whole datasets.  The lowest resolution will be used for rendering.
+  * In datasets that include multiple resolution representations of the data, each resolution can be combined to improve the speed of browsing and user experience.  An example of a dataset with multiple resolution projections can be found [here](https://download.brainimagelibrary.org/2b/da/2bdaf9e66a246844/mouseID_405429-182725/).
+  * All datasets included in the current release of napari-bil-data-viewer use multi-resolution datasets.
+* 3D rendering of whole datasets.  The lowest resolution is used for rendering.  Currently, this is a limitation imposed by napari.
 * The plugin does NOT require a BIL account as datasets are already accessible via https.
 
 ### Known Issues / limitations
-* Currently the only datasets that are available are those which have been manually selected by the developers.  If you would like a specific dataset to be included please consider adding the dataset(s) to the dataset_info.py file and submitting a pull request:  https://github.com/brain-image-library/napari-bil-data-viewer/blob/main/napari_bil_data_viewer/dataset_info.py
-* The plugin is still under development.  We appreciate all reports of errors which occur during use.  https://github.com/brain-image-library/napari-bil-data-viewer/issues
+* Currently the only datasets that are available are those which have been manually selected by the developers.  If you would like a specific dataset to be included please consider adding the dataset(s) to the [dataset_info.py](https://github.com/brain-image-library/napari-bil-data-viewer/blob/main/napari_bil_data_viewer/dataset_info.py) file and submitting a pull request.
+* To inquire about this plugin please contact Brain Image Library support:  bil-support@psc.edu
+* The plugin is still under development.  We appreciate all [reports of issues / errors](https://github.com/brain-image-library/napari-bil-data-viewer/issues) which occur during use.
 
 
 ----------------------------------
@@ -49,25 +48,19 @@ Option #1: Install plugin via the napari plugin menu
 2. Search: napari-bil-data-viewer
 3. Select install
 
-
-
 Option #2:  Install a fresh python virtual environment
 
-    # Example of venv creation using conda
-    conda create -y -n bil-viewer python=3.8
-    conda activate bil-viewer
-    
-    # Install napari-bil-data-viewer
-    pip install napari-bil-data-viewer
-    
-    # Run Napari
-    napari
+```bash
+# Example of venv creation using conda
+conda create -y -n bil-viewer python=3.8
+conda activate bil-viewer
 
-## Change Log:
+# Install napari-bil-data-viewer
+pip install napari-bil-data-viewer
 
-##### <u>v0.1.0:</u>
-
-Initial release.
+# Run Napari
+napari
+```
 
 ## Contributing
 
@@ -100,3 +93,13 @@ If you encounter any problems, please [file an issue] along with a detailed desc
 [tox]: https://tox.readthedocs.io/en/latest/
 [pip]: https://pypi.org/project/pip/
 [PyPI]: https://pypi.org/
+
+## Change Log:
+
+##### <u>v0.1.0:</u>
+
+Initial release.
+
+<u>**v0.1.1 & v0.1.2:**</u>
+
+Changes to documentation
