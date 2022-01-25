@@ -1,12 +1,14 @@
+<p href="https://www.brainimagelibrary.org/" align="center" width="100%">
+    <img width="100%" src="https://i.imgur.com/ljZKq8h.png">
+</p>
+
 
 
 # Description
 
-### [<img src="https://i.imgur.com/9Yoy9Je.png" alt="gifs/BIL_logo.png" style="zoom: 25%;" />](https://www.brainimagelibrary.org/) **[Brain Image Library](https://www.brainimagelibrary.org/)**
+View datasets archived at the **[Brain Image Library](https://www.brainimagelibrary.org/)**.
 
-#### This plugin enables viewing of datasets archived in the Brain Image Library.  
-
-**NOTE: This plugin is under early development.  Currently, only a subset of single color, fMOST datasets which include projections are available to view.  An example can be found [here]( https://download.brainimagelibrary.org/2b/da/2bdaf9e66a246844/mouseID_405429-182725/).
+**NOTE: This plugin is under early development.  Currently, only a subset of single-channel, fMOST datasets which include projections are available to view.  An example can be found [here]( https://download.brainimagelibrary.org/2b/da/2bdaf9e66a246844/mouseID_405429-182725/).
 
 
 
