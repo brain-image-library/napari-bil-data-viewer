@@ -137,7 +137,7 @@ def get_datasets():
             'contrast_limits':[0,65535]
             },
 
-        'mouseID_373187-191817': {
+        'mouseID_373187-191817': {  # checked, works
             'url': [
                 'https://download.brainimagelibrary.org/df/75/df75626840c76c15/mouseID_373187-191817/CH1_0.35_100um/',
                 'https://download.brainimagelibrary.org/df/75/df75626840c76c15/mouseID_373187-191817/CH1_3.5_100um/'
@@ -146,7 +146,7 @@ def get_datasets():
             'contrast_limits': [0, 65535]
         },
 
-        'mouseID_377387-18466': {
+        'mouseID_377387-18466': {  # checked, works
             'url': [
                 'https://download.brainimagelibrary.org/df/75/df75626840c76c15/mouseID_377387-18466/CH1_0.23_100um/',
                 'https://download.brainimagelibrary.org/df/75/df75626840c76c15/mouseID_377387-18466/CH1_2.3_100um/'
@@ -155,7 +155,7 @@ def get_datasets():
             'contrast_limits': [0, 65535]
         },
 
-        'mouseID_325875-17543': {
+        'mouseID_325875-17543': {  # checked, works
             'url': [
                 'https://download.brainimagelibrary.org/df/75/df75626840c76c15/mouseID_325875-17543/CH1_0.35_100um/',
                 'https://download.brainimagelibrary.org/df/75/df75626840c76c15/mouseID_325875-17543/CH1_3.5_100um/'
@@ -164,7 +164,7 @@ def get_datasets():
             'contrast_limits': [0, 65535]
         },
 
-        'mouseID_405426-182724': {
+        'mouseID_405426-182724': {  # checked, works
             'url': [
                 'https://download.brainimagelibrary.org/df/75/df75626840c76c15/mouseID_405426-182724/CH1_0.35_100um/',
                 'https://download.brainimagelibrary.org/df/75/df75626840c76c15/mouseID_405426-182724/CH1_3.5_100um/'
@@ -172,7 +172,34 @@ def get_datasets():
             'scale': (100, 0.35, 0.35),
             'contrast_limits': [0, 65535]
         },
-        #
+
+        'mouseID_420489-191801': {  # checked, works
+            'url': [
+                'https://download.brainimagelibrary.org/df/75/df75626840c76c15/mouseID_420489-191801/CH1_0.35_100um/',
+                'https://download.brainimagelibrary.org/df/75/df75626840c76c15/mouseID_420489-191801/CH1_3.5_100um/'
+            ],
+            'scale': (100, 0.35, 0.35),
+            'contrast_limits': [0, 65535]
+        },
+
+        'mouseID_417571-182722': {  # checked, works
+            'url': [
+                'https://download.brainimagelibrary.org/df/75/df75626840c76c15/mouseID_417571-182722/CH1_0.23_100um/',
+                'https://download.brainimagelibrary.org/df/75/df75626840c76c15/mouseID_417571-182722/CH1_2.3_100um/'
+            ],
+            'scale': (100, 0.23, 0.23),
+            'contrast_limits': [0, 65535]
+        },
+
+        'mouseID_417570-182721': {  # checked, works
+            'url': [
+                'https://download.brainimagelibrary.org/df/75/df75626840c76c15/mouseID_417570-182721/CH1_0.35_100um/',
+                'https://download.brainimagelibrary.org/df/75/df75626840c76c15/mouseID_417570-182721/CH1_3.5_100um/'
+            ],
+            'scale': (100, 0.35, 0.35),
+            'contrast_limits': [0, 65535]
+        },
+
         # 'mouseID_': {
         #     'url': [
         #         '',
