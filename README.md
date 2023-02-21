@@ -105,3 +105,7 @@ Initial release.
 <u>**v0.1.1 & v0.1.2:**</u>
 
 Changes to documentation
+
+<u>**v0.1.3:**</u>
+
+Added all available summary fMOST datasets
