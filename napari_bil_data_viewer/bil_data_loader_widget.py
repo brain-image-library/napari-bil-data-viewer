@@ -15,11 +15,42 @@ from bs4 import BeautifulSoup
 from skimage import io
 from dask import delayed
 from .dataset_info import get_datasets
+from qtpy.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QPushButton
 
-@magic_factory(auto_call=False,call_button="Load Dataset",
-                dataset={"choices": sorted([key for key in get_datasets()])}
-                )
 
+class LoadBilData(QWidget):
+    def __init__(self, napari_viewer):
+        super().__init__()
+        self.viewer = napari_viewer
+        self.datasets = sorted([key for key in get_datasets()])
+        self.dataset = self.datasets[0] if len(self.datasets) else None
+        self.init_ui()
+
+    def init_ui(self):
+        # create widgets
+        dataset_dropdown = QComboBox()
+        dataset_dropdown.addItems(self.datasets)
+        dataset_dropdown.currentTextChanged.connect(self.on_combobox_changed)
+        load_button = QPushButton("Load Dataset")
+
+        # create layout
+        hbox = QHBoxLayout()
+        hbox.addWidget(dataset_dropdown)
+        hbox.addWidget(load_button)
+        vbox = QVBoxLayout()
+        vbox.addLayout(hbox)
+        self.setLayout(vbox)
+
+        # connect signals and slots
+        load_button.clicked.connect(self.load_dataset)
+
+    def load_dataset(self):
+        data, meta, layer_type = load_bil_data(self.dataset)
+        print("meta", meta)
+        self.viewer.add_image(data, **meta)
+
+    def on_combobox_changed(self, value):
+        self.dataset = value
 
 
 def load_bil_data(
@@ -100,5 +131,4 @@ def load_bil_data(
 
 @napari_hook_implementation
 def napari_experimental_provide_dock_widget():
-    return load_bil_data
-
+    return LoadBilData
