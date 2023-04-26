@@ -15,7 +15,7 @@ from bs4 import BeautifulSoup
 from skimage import io
 from dask import delayed
 from .dataset_info import get_datasets
-from qtpy.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QPushButton
+from qtpy.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QPushButton, QLabel, QLineEdit
 
 
 class LoadBilData(QWidget):
@@ -24,25 +24,45 @@ class LoadBilData(QWidget):
         self.viewer = napari_viewer
         self.datasets = sorted([key for key in get_datasets()])
         self.dataset = self.datasets[0] if len(self.datasets) else None
+        self.swc_url = ""
         self.init_ui()
 
     def init_ui(self):
         # create widgets
+        dataset_label = QLabel("Select Dataset:")
         dataset_dropdown = QComboBox()
         dataset_dropdown.addItems(self.datasets)
         dataset_dropdown.currentTextChanged.connect(self.on_combobox_changed)
         load_button = QPushButton("Load Dataset")
+        visualize_label = QLabel("Visualize SWC:")
+        url_input = QLineEdit()
+        url_input.setPlaceholderText("paste URL")
+        url_input.textChanged.connect(self.on_swc_url_changed)
+        show_swc_button = QPushButton("Show SWC")
 
         # create layout
-        hbox = QHBoxLayout()
-        hbox.addWidget(dataset_dropdown)
-        hbox.addWidget(load_button)
+        hbox0 = QHBoxLayout()
+        hbox0.addWidget(dataset_label)
+        hbox1 = QHBoxLayout()
+        hbox1.addWidget(dataset_dropdown)
+        hbox1.addWidget(load_button)
+        hbox2 = QHBoxLayout()
+        hbox2.addWidget(visualize_label)
+        hbox3 = QHBoxLayout()
+        hbox3.addWidget(url_input)
+        hbox4 = QHBoxLayout()
+        hbox4.addWidget(show_swc_button)
         vbox = QVBoxLayout()
-        vbox.addLayout(hbox)
+        vbox.addLayout(hbox0)
+        vbox.addLayout(hbox1)
+        vbox.addLayout(hbox2)
+        vbox.addLayout(hbox3)
+        vbox.addLayout(hbox4)
         self.setLayout(vbox)
 
         # connect signals and slots
         load_button.clicked.connect(self.load_dataset)
+        show_swc_button.clicked.connect(self.load_swc)
 
     def load_dataset(self):
         data, meta, layer_type = load_bil_data(self.dataset)
@@ -51,6 +71,13 @@ class LoadBilData(QWidget):
 
     def on_combobox_changed(self, value):
         self.dataset = value
+
+    def load_swc(self):
+        data, meta, layer_type = load_bil_swc(self.swc_url, self.dataset)
+        self.viewer.add_shapes(data, **meta)
+
+    def on_swc_url_changed(self, value):
+        self.swc_url = value
 
 
 def load_bil_data(
@@ -127,6 +154,37 @@ def load_bil_data(
     
     return (data,meta,'image')
     
+
+def load_bil_swc(url, dataset):
+    from neurom import load_morphology
+    import numpy as np
+
+    print("Dataset", dataset)
+    dataset = get_datasets()[dataset]
+    print("Dataset", dataset)
+    response = requests.get(url)
+    swc_data = response.text
+    m = load_morphology(swc_data, 'swc')
+    print("Morphology loaded")
+    data = []
+    for n in m.neurites:
+        for section in n.iter_sections():
+            pts = section.points[:, :3]
+            pts_x = pts[:, 0].copy() / dataset["scale"][1]
+            pts_y = pts[:, 1].copy() / dataset["scale"][2]
+            pts_z = pts[:, 2].copy()
+            pts_rotated = np.empty_like(pts)
+            pts_rotated[:, 0] = pts_z
+            pts_rotated[:, 1] = pts_y
+            pts_rotated[:, 2] = pts_x
+            data.append(pts_rotated)
+    meta = {
+        "shape_type": 'path',
+        "edge_width": 4,
+        "edge_color": 'red',
+        "scale": [1, dataset["scale"][1], dataset["scale"][2]]
+    }
+    return (data, meta, 'shapes')
 
 
 @napari_hook_implementation
