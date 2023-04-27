@@ -75,11 +75,16 @@ class LoadBilData(QWidget):
         self.dataset = value
 
     def load_swc(self):
+        import numpy as np
+        from napari.utils.colormaps.colormap_utils import _color_random
+
         points, shapes = load_bil_swc(self.swc_url, self.dataset)
         data, meta, __ = shapes
         soma, soma_meta, __ = points
+        random_color = _color_random(1, seed=np.random.uniform())
+        meta["edge_color"] = random_color
         if self.tracings_layer:
-            self.tracings_layer.add_paths(data)
+            self.tracings_layer.add_paths(data, edge_color=random_color)
         else:
             self.tracings_layer = self.viewer.add_shapes(data, **meta)
         if self.soma_layer:
