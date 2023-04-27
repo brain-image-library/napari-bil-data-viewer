@@ -73,8 +73,11 @@ class LoadBilData(QWidget):
         self.dataset = value
 
     def load_swc(self):
-        data, meta, layer_type = load_bil_swc(self.swc_url, self.dataset)
+        points, shapes = load_bil_swc(self.swc_url, self.dataset)
+        data, meta, __ = shapes
+        soma, soma_meta, __ = points
         self.viewer.add_shapes(data, **meta)
+        self.viewer.add_points(soma, **soma_meta)
 
     def on_swc_url_changed(self, value):
         self.swc_url = value
@@ -171,8 +174,8 @@ def load_bil_swc(url, dataset):
     for n in m.neurites:
         for section in n.iter_sections():
             pts = section.points[:, :3]
-            pts_x = pts[:, 0].copy() / dataset["scale"][1]
-            pts_y = pts[:, 1].copy() / dataset["scale"][2]
+            pts_x = pts[:, 0].copy() / dataset["scale"][2]
+            pts_y = pts[:, 1].copy() / dataset["scale"][1]
             pts_z = pts[:, 2].copy() / dataset["scale"][0]
             pts_rotated = np.empty_like(pts)
             pts_rotated[:, 0] = pts_z
@@ -183,9 +186,27 @@ def load_bil_swc(url, dataset):
         "shape_type": 'path',
         "edge_width": 4,
         "edge_color": 'red',
-        "scale": [dataset["scale"][0], dataset["scale"][1], dataset["scale"][2]]
+        "scale": [dataset["scale"][0], dataset["scale"][1], dataset["scale"][2]],
+        "name": "neuron tracings"
     }
-    return (data, meta, 'shapes')
+
+    center_x, center_y, center_z = m.soma.center
+    center_x /= dataset["scale"][2]
+    center_y /= dataset["scale"][1]
+    center_z /= dataset["scale"][0]
+    soma = [center_z, center_y, center_x]
+
+    soma_meta = {
+        "face_color": "yellow",
+        "edge_color": "black",
+        "size": 200,
+        "scale": [dataset["scale"][0], dataset["scale"][1], dataset["scale"][2]],
+        "name": "soma"
+    }
+
+    paths_tuple = (data, meta, 'shapes')
+    soma_tuple = (soma, soma_meta, 'points')
+    return soma_tuple, paths_tuple
 
 
 @napari_hook_implementation
