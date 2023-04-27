@@ -22,6 +22,8 @@ class LoadBilData(QWidget):
     def __init__(self, napari_viewer):
         super().__init__()
         self.viewer = napari_viewer
+        self.soma_layer = None
+        self.tracings_layer = None
         self.datasets = sorted([key for key in get_datasets()])
         self.dataset = self.datasets[0] if len(self.datasets) else None
         self.swc_url = ""
@@ -76,8 +78,14 @@ class LoadBilData(QWidget):
         points, shapes = load_bil_swc(self.swc_url, self.dataset)
         data, meta, __ = shapes
         soma, soma_meta, __ = points
-        self.viewer.add_shapes(data, **meta)
-        self.viewer.add_points(soma, **soma_meta)
+        if self.tracings_layer:
+            self.tracings_layer.add_paths(data)
+        else:
+            self.tracings_layer = self.viewer.add_shapes(data, **meta)
+        if self.soma_layer:
+            self.soma_layer.add(soma)
+        else:
+            self.soma_layer = self.viewer.add_points(soma, **soma_meta)
 
     def on_swc_url_changed(self, value):
         self.swc_url = value
