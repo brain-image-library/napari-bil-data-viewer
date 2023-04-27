@@ -15,7 +15,8 @@ from bs4 import BeautifulSoup
 from skimage import io
 from dask import delayed
 from .dataset_info import get_datasets
-from qtpy.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QPushButton, QLabel, QLineEdit
+from qtpy.QtCore import Qt
+from qtpy.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QPushButton, QLabel, QLineEdit, QCheckBox
 
 
 class LoadBilData(QWidget):
@@ -27,6 +28,8 @@ class LoadBilData(QWidget):
         self.datasets = sorted([key for key in get_datasets()])
         self.dataset = self.datasets[0] if len(self.datasets) else None
         self.swc_url = ""
+        self.visualized_tracings = []
+        self.neuron_sections = []
         self.init_ui()
 
     def init_ui(self):
@@ -41,6 +44,7 @@ class LoadBilData(QWidget):
         url_input.setPlaceholderText("paste URL")
         url_input.textChanged.connect(self.on_swc_url_changed)
         show_swc_button = QPushButton("Show SWC")
+        swc_checkboxes = []
 
         # create layout
         hbox0 = QHBoxLayout()
@@ -60,11 +64,16 @@ class LoadBilData(QWidget):
         vbox.addLayout(hbox2)
         vbox.addLayout(hbox3)
         vbox.addLayout(hbox4)
+
+        # dynamically add checkboxes for SWC files
+        dataset_dropdown.currentIndexChanged.connect(lambda: self.create_swc_checkboxes(dataset_dropdown.currentText(), vbox, swc_checkboxes))
+
         self.setLayout(vbox)
 
         # connect signals and slots
         load_button.clicked.connect(self.load_dataset)
         show_swc_button.clicked.connect(self.load_swc)
+        show_swc_button.clicked.connect(lambda: self.add_checkbox(vbox, url_input.text(), swc_checkboxes))
 
     def load_dataset(self):
         data, meta, layer_type = load_bil_data(self.dataset)
@@ -74,12 +83,16 @@ class LoadBilData(QWidget):
     def on_combobox_changed(self, value):
         self.dataset = value
 
-    def load_swc(self):
+    def load_swc(self, url=None):
         import numpy as np
         from napari.utils.colormaps.colormap_utils import _color_random
 
-        points, shapes = load_bil_swc(self.swc_url, self.dataset)
+        if not url:
+            url = self.swc_url
+
+        points, shapes = load_bil_swc(url, self.dataset)
         data, meta, __ = shapes
+        self.neuron_sections.append(len(data))
         soma, soma_meta, __ = points
         random_color = _color_random(1, seed=np.random.uniform())
         meta["edge_color"] = random_color
@@ -91,9 +104,68 @@ class LoadBilData(QWidget):
             self.soma_layer.add(soma)
         else:
             self.soma_layer = self.viewer.add_points(soma, **soma_meta)
+        self.visualized_tracings.append(url)
 
     def on_swc_url_changed(self, value):
         self.swc_url = value
+
+    def create_swc_checkboxes(self, dataset_name, vbox, swc_checkboxes):
+        # remove existing checkboxes
+        for checkbox in swc_checkboxes:
+            vbox.removeWidget(checkbox)
+            checkbox.setParent(None)
+
+        # get SWC files for selected dataset
+        swc_files = get_swc_files(dataset_name)
+
+        # create checkboxes for each SWC file
+        for swc_file in swc_files:
+            checkbox = QCheckBox(swc_file)
+            vbox.addWidget(checkbox)
+            swc_checkboxes.append(checkbox)
+            checkbox.stateChanged.connect(lambda state, path=swc_file: self.visualize_swc(path, state))
+
+    def visualize_swc(self, path_to_swc, state):
+        print("state", state)
+        if state == Qt.Checked:
+            print(f"Visualizing {path_to_swc}")
+            self.load_swc(path_to_swc)
+        else:
+            print(f"Hiding {path_to_swc}")
+            self.hide_swc(path_to_swc)
+
+    def add_checkbox(self, vbox, swc_file_path, swc_checkboxes):
+        if swc_file_path:
+            checkbox = QCheckBox(swc_file_path)
+            checkbox.setChecked(True)
+            vbox.addWidget(checkbox)
+            checkbox.stateChanged.connect(lambda state, path=swc_file_path: self.visualize_swc(path, state))
+            swc_checkboxes.append(checkbox)
+
+    def hide_swc(self, url):
+        print("self.visualized_tracings before", self.visualized_tracings)
+        print("self.neuron_sections before", self.neuron_sections)
+        url_index = self.visualized_tracings.index(url)
+        print("url_index", url_index)
+        self.soma_layer.selected_data = set([url_index])
+        self.soma_layer.remove_selected()
+        start_index = sum(self.neuron_sections[:url_index])
+        end_index = start_index + self.neuron_sections[url_index]
+        print(start_index, end_index)
+        indices_to_hide = range(start_index, end_index)
+        self.tracings_layer.selected_data = set(indices_to_hide)
+        self.tracings_layer.remove_selected()
+        self.visualized_tracings.pop(url_index)
+        self.neuron_sections.pop(url_index)
+        print("self.visualized_tracings after", self.visualized_tracings)
+        print("self.neuron_sections after", self.neuron_sections)
+
+
+def get_swc_files(dataset_name):
+    datasets = get_datasets()
+    swc_files = datasets[dataset_name].get('swc', [])
+    print("SWC files", swc_files)
+    return swc_files
 
 
 def load_bil_data(
@@ -197,7 +269,7 @@ def load_bil_swc(url, dataset):
             data.append(pts_rotated)
     meta = {
         "shape_type": 'path',
-        "edge_width": 4,
+        "edge_width": 8,
         "edge_color": 'red',
         "scale": [dataset["scale"][0], dataset["scale"][1], dataset["scale"][2]],
         "name": "neuron tracings"
