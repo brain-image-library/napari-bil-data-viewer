@@ -158,9 +158,10 @@ def load_bil_data(
 def load_bil_swc(url, dataset):
     from neurom import load_morphology
     import numpy as np
+    from .fMOST_datasets import datasets
 
     print("Dataset", dataset)
-    dataset = get_datasets()[dataset]
+    dataset = datasets.get(dataset, get_datasets()[dataset])
     print("Dataset", dataset)
     response = requests.get(url)
     swc_data = response.text
@@ -172,7 +173,7 @@ def load_bil_swc(url, dataset):
             pts = section.points[:, :3]
             pts_x = pts[:, 0].copy() / dataset["scale"][1]
             pts_y = pts[:, 1].copy() / dataset["scale"][2]
-            pts_z = pts[:, 2].copy()
+            pts_z = pts[:, 2].copy() / dataset["scale"][0]
             pts_rotated = np.empty_like(pts)
             pts_rotated[:, 0] = pts_z
             pts_rotated[:, 1] = pts_y
@@ -182,7 +183,7 @@ def load_bil_swc(url, dataset):
         "shape_type": 'path',
         "edge_width": 4,
         "edge_color": 'red',
-        "scale": [1, dataset["scale"][1], dataset["scale"][2]]
+        "scale": [dataset["scale"][0], dataset["scale"][1], dataset["scale"][2]]
     }
     return (data, meta, 'shapes')
 
