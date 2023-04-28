@@ -1237,10 +1237,6 @@ def get_datasets():
                                          'https://download.brainimagelibrary.org/00/9c/009c1e6fcc03ebac/mouseID_19032507-191175/CH1_0.35_100um',
                                          'https://download.brainimagelibrary.org/00/9c/009c1e6fcc03ebac/mouseID_19032507-191175/CH1_3.5_100um'
                                      ],
-                                     'swc': [
-                                         'https://download.brainimagelibrary.org/3a/c1/3ac1bdc022d0da78/191175-2/mouseID_191175_01.swc',
-                                         'https://download.brainimagelibrary.org/3a/c1/3ac1bdc022d0da78/191175-2/mouseID_191175_02.swc',
-                                     ]
                                      },
          'mouseID_19032508-191171': {'contrast_limits': [0, 65535],
                                      'scale': (100, 0.35, 0.35),
@@ -1249,14 +1245,6 @@ def get_datasets():
                                          'https://download.brainimagelibrary.org/00/9c/009c1e6fcc03ebac/mouseID_19032508-191171/CH1_0.35_100um',
                                          'https://download.brainimagelibrary.org/00/9c/009c1e6fcc03ebac/mouseID_19032508-191171/CH1_3.5_100um'
                                      ],
-                                     'swc': [
-                                         'https://download.brainimagelibrary.org/3a/c1/3ac1bdc022d0da78/191171-20/mouseID_191171_01.swc',
-                                         'https://download.brainimagelibrary.org/3a/c1/3ac1bdc022d0da78/191171-20/mouseID_191171_02.swc',
-                                         'https://download.brainimagelibrary.org/3a/c1/3ac1bdc022d0da78/191171-20/mouseID_191171_03.swc',
-                                         'https://download.brainimagelibrary.org/3a/c1/3ac1bdc022d0da78/191171-20/mouseID_191171_04.swc',
-                                         'https://download.brainimagelibrary.org/3a/c1/3ac1bdc022d0da78/191171-20/mouseID_191171_05.swc',
-                                         'https://download.brainimagelibrary.org/3a/c1/3ac1bdc022d0da78/191171-20/mouseID_191171_06.swc'
-                                     ]
                                      },
          'mouseID_19032509-191174': {'contrast_limits': [0, 65535],
                                      'scale': (100, 0.35, 0.35),

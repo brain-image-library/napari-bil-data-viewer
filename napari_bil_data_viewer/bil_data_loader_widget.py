@@ -178,8 +178,8 @@ class LoadBilData(QWidget):
 
 
 def get_swc_files(dataset_name):
-    datasets = get_datasets()
-    swc_files = datasets[dataset_name].get('swc', [])
+    from .fMOST_swc import swc_datasets
+    swc_files = swc_datasets.get(dataset_name, [])
     print("SWC files", swc_files)
     return swc_files
 
