@@ -72,8 +72,8 @@ class LoadBilData(QWidget):
 
         # connect signals and slots
         load_button.clicked.connect(self.load_dataset)
-        show_swc_button.clicked.connect(self.load_swc)
-        show_swc_button.clicked.connect(lambda: self.add_checkbox(vbox, url_input.text(), swc_checkboxes))
+        # show_swc_button.clicked.connect(self.load_swc)
+        show_swc_button.clicked.connect(lambda: self.add_checkboxes(vbox, url_input.text(), swc_checkboxes))
 
     def load_dataset(self):
         data, meta, layer_type = load_bil_data(self.dataset)
@@ -141,12 +141,28 @@ class LoadBilData(QWidget):
             vbox.addWidget(checkbox)
             checkbox.stateChanged.connect(lambda state, path=swc_file_path: self.visualize_swc(path, state))
             swc_checkboxes.append(checkbox)
+            self.load_swc(swc_file_path)
+
+    def add_checkboxes(self, vbox, url, swc_checkboxes):
+        # Check if the URL leads to a folder or a file
+        if url.endswith('.swc'):
+            self.add_checkbox(vbox, url, swc_checkboxes)
+        else:
+            # assume folder with swc
+            swc_files = getFilesHttp(url, 'swc')
+            print("swc files", swc_files)
+            self.add_folder_checkboxes(vbox, swc_files, swc_checkboxes)
+
+    def add_folder_checkboxes(self, vbox, swc_files, swc_checkboxes):
+        # add a checkbox for each SWC file
+        for swc_file in swc_files:
+            self.add_checkbox(vbox, swc_file, swc_checkboxes)
 
     def hide_swc(self, url):
-        print("self.visualized_tracings before", self.visualized_tracings)
-        print("self.neuron_sections before", self.neuron_sections)
+        # print("self.visualized_tracings before", self.visualized_tracings)
+        # print("self.neuron_sections before", self.neuron_sections)
         url_index = self.visualized_tracings.index(url)
-        print("url_index", url_index)
+        # print("url_index", url_index)
         self.soma_layer.selected_data = set([url_index])
         self.soma_layer.remove_selected()
         start_index = sum(self.neuron_sections[:url_index])
@@ -157,8 +173,8 @@ class LoadBilData(QWidget):
         self.tracings_layer.remove_selected()
         self.visualized_tracings.pop(url_index)
         self.neuron_sections.pop(url_index)
-        print("self.visualized_tracings after", self.visualized_tracings)
-        print("self.neuron_sections after", self.neuron_sections)
+        # print("self.visualized_tracings after", self.visualized_tracings)
+        # print("self.neuron_sections after", self.neuron_sections)
 
 
 def get_swc_files(dataset_name):
@@ -166,6 +182,20 @@ def get_swc_files(dataset_name):
     swc_files = datasets[dataset_name].get('swc', [])
     print("SWC files", swc_files)
     return swc_files
+
+
+def getFilesHttp(url: str, ext: str) -> list:
+    def listFD(url, ext=''):
+        page = requests.get(url).text
+        # print(page)
+        soup = BeautifulSoup(page, 'html.parser')
+        return [url + '/' + node.get('href') for node in soup.find_all('a') if node.get('href').endswith(ext)]
+
+    files = []
+    for file in listFD(url, ext):
+        files.append(file)
+
+    return files
 
 
 def load_bil_data(
@@ -185,19 +215,6 @@ def load_bil_data(
     
     bilData = dataset_info['url']
     ext = 'tif'
-
-    def getFilesHttp(url: str,ext: str) -> list:
-        def listFD(url, ext=''):
-            page = requests.get(url).text
-            # print(page)
-            soup = BeautifulSoup(page, 'html.parser')
-            return [url + '/' + node.get('href') for node in soup.find_all('a') if node.get('href').endswith(ext)]
-        
-        files = []
-        for file in listFD(url, ext):
-            files.append(file)
-            
-        return files
 
     def getImage(fileObj):
         with fileObj as f:
@@ -237,9 +254,7 @@ def load_bil_data(
         # 'metadata':meta['metadata'],
         
         }
-        
-        
-    
+
     return (data,meta,'image')
     
 
