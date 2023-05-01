@@ -16,7 +16,7 @@ from skimage import io
 from dask import delayed
 from .dataset_info import get_datasets
 from qtpy.QtCore import Qt
-from qtpy.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QPushButton, QLabel, QLineEdit, QCheckBox
+from qtpy.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QPushButton, QLabel, QLineEdit, QCheckBox, QSpacerItem
 
 
 class LoadBilData(QWidget):
@@ -47,33 +47,44 @@ class LoadBilData(QWidget):
         swc_checkboxes = []
 
         # create layout
-        hbox0 = QHBoxLayout()
-        hbox0.addWidget(dataset_label)
-        hbox1 = QHBoxLayout()
-        hbox1.addWidget(dataset_dropdown)
-        hbox1.addWidget(load_button)
-        hbox2 = QHBoxLayout()
-        hbox2.addWidget(visualize_label)
-        hbox3 = QHBoxLayout()
-        hbox3.addWidget(url_input)
-        hbox4 = QHBoxLayout()
-        hbox4.addWidget(show_swc_button)
-        vbox = QVBoxLayout()
-        vbox.addLayout(hbox0)
-        vbox.addLayout(hbox1)
-        vbox.addLayout(hbox2)
-        vbox.addLayout(hbox3)
-        vbox.addLayout(hbox4)
+        vbox_main = QVBoxLayout()
+        hbox_dataset = QHBoxLayout()
+        hbox_swc = QHBoxLayout()
+        hbox_dataset_label = QHBoxLayout()
+        hbox_dataset_label.addWidget(dataset_label)
+        hbox_dataset_dropdown = QHBoxLayout()
+        hbox_dataset_dropdown.addWidget(dataset_dropdown)
+        hbox_dataset_load_btn = QHBoxLayout()
+        hbox_dataset_load_btn.addWidget(load_button)
+        hbox_swc_label = QHBoxLayout()
+        hbox_swc_label.addWidget(visualize_label)
+        hbox_url_input = QHBoxLayout()
+        hbox_url_input.addWidget(url_input)
+        hbox_show_swc_btn = QHBoxLayout()
+        hbox_show_swc_btn.addWidget(show_swc_button)
+        vbox_dataset = QVBoxLayout()
+        vbox_dataset.addLayout(hbox_dataset_label)
+        vbox_dataset.addLayout(hbox_dataset_dropdown)
+        vbox_dataset.addLayout(hbox_dataset_load_btn)
+        vbox_dataset.addItem(QSpacerItem(1, 50))
+        vbox_swc = QVBoxLayout()
+        vbox_swc.addLayout(hbox_swc_label)
+        vbox_swc.addLayout(hbox_url_input)
+        vbox_swc.addLayout(hbox_show_swc_btn)
+        hbox_dataset.addLayout(vbox_dataset)
+        hbox_swc.addLayout(vbox_swc)
+        vbox_main.addLayout(hbox_dataset)
+        vbox_main.addLayout(hbox_swc)
 
         # dynamically add checkboxes for SWC files
-        dataset_dropdown.currentIndexChanged.connect(lambda: self.create_swc_checkboxes(dataset_dropdown.currentText(), vbox, swc_checkboxes))
+        dataset_dropdown.currentIndexChanged.connect(lambda: self.create_swc_checkboxes(dataset_dropdown.currentText(), vbox_swc, swc_checkboxes))
 
-        self.setLayout(vbox)
+        self.setLayout(vbox_main)
 
         # connect signals and slots
         load_button.clicked.connect(self.load_dataset)
         # show_swc_button.clicked.connect(self.load_swc)
-        show_swc_button.clicked.connect(lambda: self.add_checkboxes(vbox, url_input.text(), swc_checkboxes))
+        show_swc_button.clicked.connect(lambda: self.add_checkboxes(vbox_swc, url_input.text(), swc_checkboxes))
 
     def load_dataset(self):
         data, meta, layer_type = load_bil_data(self.dataset)
@@ -154,15 +165,19 @@ class LoadBilData(QWidget):
             self.add_folder_checkboxes(vbox, swc_files, swc_checkboxes)
 
     def add_folder_checkboxes(self, vbox, swc_files, swc_checkboxes):
-        # add a checkbox for each SWC file
+        # add a checkbox for each SWC file when URL points to a folder with multiple swc
         for swc_file in swc_files:
             self.add_checkbox(vbox, swc_file, swc_checkboxes)
 
     def hide_swc(self, url):
-        # print("self.visualized_tracings before", self.visualized_tracings)
-        # print("self.neuron_sections before", self.neuron_sections)
+        """
+        Hide unchecked neuron tracing.
+
+        Remove soma point from points layer, and paths from shapes layer.
+        :param url:
+        :return:
+        """
         url_index = self.visualized_tracings.index(url)
-        # print("url_index", url_index)
         self.soma_layer.selected_data = set([url_index])
         self.soma_layer.remove_selected()
         start_index = sum(self.neuron_sections[:url_index])
@@ -173,8 +188,6 @@ class LoadBilData(QWidget):
         self.tracings_layer.remove_selected()
         self.visualized_tracings.pop(url_index)
         self.neuron_sections.pop(url_index)
-        # print("self.visualized_tracings after", self.visualized_tracings)
-        # print("self.neuron_sections after", self.neuron_sections)
 
 
 def get_swc_files(dataset_name):
