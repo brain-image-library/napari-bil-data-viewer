@@ -3,6 +3,13 @@
 Created on Sun Oct 24 16:49:37 2021
 
 @author: alpha
+
+Roadmap:
+- Add more datasets, test them
+- Display both in 2D and 3D
+- Improve the performance
+- Migrate to npe2
+- Write the tests
 """
 
 import napari
@@ -131,7 +138,7 @@ class LoadBilData(QWidget):
 
         # create checkboxes for each SWC file
         for swc_file in swc_files:
-            checkbox = QCheckBox(swc_file)
+            checkbox = QCheckBox(shorten_swc_path(swc_file))
             vbox.addWidget(checkbox)
             swc_checkboxes.append(checkbox)
             checkbox.stateChanged.connect(lambda state, path=swc_file: self.visualize_swc(path, state))
@@ -147,7 +154,7 @@ class LoadBilData(QWidget):
 
     def add_checkbox(self, vbox, swc_file_path, swc_checkboxes):
         if swc_file_path:
-            checkbox = QCheckBox(swc_file_path)
+            checkbox = QCheckBox(shorten_swc_path(swc_file_path))
             checkbox.setChecked(True)
             vbox.addWidget(checkbox)
             checkbox.stateChanged.connect(lambda state, path=swc_file_path: self.visualize_swc(path, state))
@@ -161,7 +168,6 @@ class LoadBilData(QWidget):
         else:
             # assume folder with swc
             swc_files = getFilesHttp(url, 'swc')
-            print("swc files", swc_files)
             self.add_folder_checkboxes(vbox, swc_files, swc_checkboxes)
 
     def add_folder_checkboxes(self, vbox, swc_files, swc_checkboxes):
@@ -193,8 +199,12 @@ class LoadBilData(QWidget):
 def get_swc_files(dataset_name):
     from .fMOST_swc import swc_datasets
     swc_files = swc_datasets.get(dataset_name, [])
-    print("SWC files", swc_files)
     return swc_files
+
+
+def shorten_swc_path(path):
+    split_path = path.split("/")
+    return split_path[-1] if len(split_path) else path
 
 
 def getFilesHttp(url: str, ext: str) -> list:
@@ -276,9 +286,7 @@ def load_bil_swc(url, dataset):
     import numpy as np
     from .fMOST_datasets import datasets
 
-    print("Dataset", dataset)
     dataset = datasets.get(dataset, get_datasets()[dataset])
-    print("Dataset", dataset)
     response = requests.get(url)
     swc_data = response.text
     m = load_morphology(swc_data, 'swc')
@@ -319,6 +327,7 @@ def load_bil_swc(url, dataset):
 
     paths_tuple = (data, meta, 'shapes')
     soma_tuple = (soma, soma_meta, 'points')
+    print("Layer data ready. Rendering")
     return soma_tuple, paths_tuple
 
 
