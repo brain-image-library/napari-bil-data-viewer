@@ -5,10 +5,12 @@ Created on Sun Oct 24 16:49:37 2021
 @author: alpha
 
 Roadmap:
-- Add more datasets, test them
+- Scrollable list of SWCs (if many of them)
+- Add more SWC datasets, test them
 - Display both in 2D and 3D
 - Improve the performance
 - Migrate to npe2
+- Do loading in separate thread
 - Write the tests
 """
 
@@ -327,7 +329,7 @@ def load_bil_swc(url, dataset):
 
     paths_tuple = (data, meta, 'shapes')
     soma_tuple = (soma, soma_meta, 'points')
-    print("Layer data ready. Rendering")
+    print("Layer data ready. Rendering...")
     return soma_tuple, paths_tuple
 
 
