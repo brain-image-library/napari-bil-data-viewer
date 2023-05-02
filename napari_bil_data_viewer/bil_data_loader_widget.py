@@ -114,11 +114,11 @@ class LoadBilData(QWidget):
         soma, soma_meta, __ = points
         random_color = _color_random(1, seed=np.random.uniform())
         meta["edge_color"] = random_color
-        if self.tracings_layer:
+        if self.tracings_layer and 'neuron tracings' in self.viewer.layers:
             self.tracings_layer.add_paths(data, edge_color=random_color)
         else:
             self.tracings_layer = self.viewer.add_shapes(data, **meta)
-        if self.soma_layer:
+        if self.soma_layer and 'soma' in self.viewer.layers:
             self.soma_layer.add(soma)
         else:
             self.soma_layer = self.viewer.add_points(soma, **soma_meta)
