@@ -1235,13 +1235,17 @@ def get_datasets():
                                      'url': [
                                          # 'https://download.brainimagelibrary.org/00/9c/009c1e6fcc03ebac/mouseID_19032507-191175/CH1',
                                          'https://download.brainimagelibrary.org/00/9c/009c1e6fcc03ebac/mouseID_19032507-191175/CH1_0.35_100um',
-                                         'https://download.brainimagelibrary.org/00/9c/009c1e6fcc03ebac/mouseID_19032507-191175/CH1_3.5_100um']},
+                                         'https://download.brainimagelibrary.org/00/9c/009c1e6fcc03ebac/mouseID_19032507-191175/CH1_3.5_100um'
+                                     ],
+                                     },
          'mouseID_19032508-191171': {'contrast_limits': [0, 65535],
                                      'scale': (100, 0.35, 0.35),
                                      'url': [
                                          # 'https://download.brainimagelibrary.org/00/9c/009c1e6fcc03ebac/mouseID_19032508-191171/CH1',
                                          'https://download.brainimagelibrary.org/00/9c/009c1e6fcc03ebac/mouseID_19032508-191171/CH1_0.35_100um',
-                                         'https://download.brainimagelibrary.org/00/9c/009c1e6fcc03ebac/mouseID_19032508-191171/CH1_3.5_100um']},
+                                         'https://download.brainimagelibrary.org/00/9c/009c1e6fcc03ebac/mouseID_19032508-191171/CH1_3.5_100um'
+                                     ],
+                                     },
          'mouseID_19032509-191174': {'contrast_limits': [0, 65535],
                                      'scale': (100, 0.35, 0.35),
                                      'url': [
@@ -1489,6 +1493,5 @@ def get_datasets():
         
         
         
-    print("============================Total datasets:", len(datasets))
+    print("Total datasets:", len(datasets))
     return datasets
-    
