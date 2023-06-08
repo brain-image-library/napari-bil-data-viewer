@@ -109,3 +109,7 @@ Changes to documentation
 <u>**v0.1.3:**</u>
 
 Added all available summary fMOST datasets
+
+<u>**v0.2.0:**</u>
+
+Added support for SWC neuron tracings
