@@ -1,6 +1,9 @@
 import os
 
+import PIL
 from napari_plugin_engine import napari_hook_implementation
+
+PIL.Image.MAX_IMAGE_PIXELS = 93312000000
 
 
 def read_swc(path):
