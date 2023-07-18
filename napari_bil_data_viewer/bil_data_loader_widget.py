@@ -221,11 +221,9 @@ class LoadBilData(QWidget):
         self.neuron_sections.pop(url_index)
 
     def on_fullresolution_url_changed(self, value):
-        print("Full resolution URL")
         self.fullresolution_url = value
 
     def load_full_resolution(self):
-        print("Full resolution button")
         self.viewer.open(self.fullresolution_url, plugin="napari-ome-zarr")
 
 
