@@ -37,6 +37,7 @@ class LoadBilData(QWidget):
         self.datasets = sorted([key for key in get_datasets()])
         self.dataset = self.datasets[0] if len(self.datasets) else None
         self.swc_url = ""
+        self.fullresolution_url = ""
         self.visualized_tracings = []
         self.neuron_sections = []
         self.init_ui()
@@ -48,6 +49,13 @@ class LoadBilData(QWidget):
         dataset_dropdown.addItems(self.datasets)
         dataset_dropdown.currentTextChanged.connect(self.on_combobox_changed)
         load_button = QPushButton("Load Dataset")
+        # ------------------------
+        fullresolution_label = QLabel("Visualize Full Resolution:")
+        url_input_fullresolution = QLineEdit()
+        url_input_fullresolution.setPlaceholderText("paste URL")
+        url_input_fullresolution.textChanged.connect(self.on_fullresolution_url_changed)
+        show_button_fullresolution = QPushButton("Load Full Resolution")
+        # ------------------------
         visualize_label = QLabel("Visualize SWC:")
         url_input = QLineEdit()
         url_input.setPlaceholderText("paste URL")
@@ -58,6 +66,7 @@ class LoadBilData(QWidget):
         # create layout
         vbox_main = QVBoxLayout()
         hbox_dataset = QHBoxLayout()
+        hbox_fullresolution = QHBoxLayout()
         hbox_swc = QHBoxLayout()
         hbox_dataset_label = QHBoxLayout()
         hbox_dataset_label.addWidget(dataset_label)
@@ -65,6 +74,12 @@ class LoadBilData(QWidget):
         hbox_dataset_dropdown.addWidget(dataset_dropdown)
         hbox_dataset_load_btn = QHBoxLayout()
         hbox_dataset_load_btn.addWidget(load_button)
+        hbox_fullresolution_label = QHBoxLayout()
+        hbox_fullresolution_label.addWidget(fullresolution_label)
+        hbox_fullresolution_url_input = QHBoxLayout()
+        hbox_fullresolution_url_input.addWidget(url_input_fullresolution)
+        hbox_fullresolution_show_button = QHBoxLayout()
+        hbox_fullresolution_show_button.addWidget(show_button_fullresolution)
         hbox_swc_label = QHBoxLayout()
         hbox_swc_label.addWidget(visualize_label)
         hbox_url_input = QHBoxLayout()
@@ -76,13 +91,20 @@ class LoadBilData(QWidget):
         vbox_dataset.addLayout(hbox_dataset_dropdown)
         vbox_dataset.addLayout(hbox_dataset_load_btn)
         vbox_dataset.addItem(QSpacerItem(1, 50))
+        vbox_fullresolution = QVBoxLayout()
+        vbox_fullresolution.addLayout(hbox_fullresolution_label)
+        vbox_fullresolution.addLayout(hbox_fullresolution_url_input)
+        vbox_fullresolution.addLayout(hbox_fullresolution_show_button)
+        vbox_fullresolution.addItem(QSpacerItem(1, 50))
         vbox_swc = QVBoxLayout()
         vbox_swc.addLayout(hbox_swc_label)
         vbox_swc.addLayout(hbox_url_input)
         vbox_swc.addLayout(hbox_show_swc_btn)
         hbox_dataset.addLayout(vbox_dataset)
+        hbox_fullresolution.addLayout(vbox_fullresolution)
         hbox_swc.addLayout(vbox_swc)
         vbox_main.addLayout(hbox_dataset)
+        vbox_main.addLayout(hbox_fullresolution)
         vbox_main.addLayout(hbox_swc)
 
         # dynamically add checkboxes for SWC files
@@ -94,6 +116,7 @@ class LoadBilData(QWidget):
         load_button.clicked.connect(self.load_dataset)
         # show_swc_button.clicked.connect(self.load_swc)
         show_swc_button.clicked.connect(lambda: self.add_checkboxes(vbox_swc, url_input.text(), swc_checkboxes))
+        show_button_fullresolution.clicked.connect(self.load_full_resolution)
 
     def load_dataset(self):
         data, meta, layer_type = load_bil_data(self.dataset)
@@ -196,6 +219,12 @@ class LoadBilData(QWidget):
         self.tracings_layer.remove_selected()
         self.visualized_tracings.pop(url_index)
         self.neuron_sections.pop(url_index)
+
+    def on_fullresolution_url_changed(self, value):
+        self.fullresolution_url = value
+
+    def load_full_resolution(self):
+        self.viewer.open(self.fullresolution_url, plugin="napari-ome-zarr")
 
 
 def get_swc_files(dataset_name):
