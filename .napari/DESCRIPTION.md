@@ -113,3 +113,7 @@ Added all available summary fMOST datasets
 <u>**v0.2.0:**</u>
 
 Added support for SWC neuron tracings
+
+<u>**v0.3.0:**</u>
+
+Added support for multiscale OME zarr data
