@@ -6,8 +6,6 @@ Created on Sun Oct 24 16:49:37 2021
 
 Roadmap:
 - Scrollable list of SWCs (if many of them)
-- Add more SWC datasets, test them
-- Display both in 2D and 3D
 - Improve the performance
 - Migrate to npe2
 - Do loading in separate thread
@@ -25,7 +23,9 @@ from skimage import io
 from dask import delayed
 from .dataset_info import get_datasets
 from qtpy.QtCore import Qt
-from qtpy.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QPushButton, QLabel, QLineEdit, QCheckBox, QSpacerItem
+from qtpy.QtWidgets import (
+    QApplication, QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QPushButton, QLabel, QLineEdit, QCheckBox, QSpacerItem, QScrollArea, QGroupBox, QFormLayout
+)
 
 
 class LoadBilData(QWidget):
@@ -107,8 +107,22 @@ class LoadBilData(QWidget):
         vbox_main.addLayout(hbox_fullresolution)
         vbox_main.addLayout(hbox_swc)
 
+        scroll = QScrollArea()
+        mygroupbox = QGroupBox('pre-loaded SWC')
+        myform = QFormLayout()
+        mygroupbox.setLayout(myform)
+        scroll.setWidget(mygroupbox)
+        scroll.setWidgetResizable(True)
+        # scroll.setFixedHeight(300)
+        vscroll = QVBoxLayout()
+        vscroll.addWidget(scroll)
+        hscroll = QHBoxLayout()
+        hscroll.addLayout(vscroll)
+        vbox_main.addLayout(hscroll)
+
+
         # dynamically add checkboxes for SWC files
-        dataset_dropdown.currentIndexChanged.connect(lambda: self.create_swc_checkboxes(dataset_dropdown.currentText(), vbox_swc, swc_checkboxes))
+        dataset_dropdown.currentIndexChanged.connect(lambda: self.create_swc_checkboxes(dataset_dropdown.currentText(), myform, swc_checkboxes))
 
         self.setLayout(vbox_main)
 
