@@ -26,6 +26,7 @@ from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QPushButton, QLabel, QLineEdit, QCheckBox, QSpacerItem, QScrollArea, QGroupBox, QFormLayout
 )
+from napari.qt.threading import thread_worker
 
 
 class LoadBilData(QWidget):
@@ -133,9 +134,16 @@ class LoadBilData(QWidget):
         show_button_fullresolution.clicked.connect(self.load_full_resolution)
 
     def load_dataset(self):
-        data, meta, layer_type = load_bil_data(self.dataset)
-        print("meta", meta)
-        self.viewer.add_image(data, **meta)
+
+        def _show_img(args):
+            data, meta, layer_type = args
+            self.viewer.add_image(data, **meta)
+
+        @thread_worker(connect={"returned": _show_img})
+        def _load_img():
+            return load_bil_data(self.dataset)
+
+        _load_img()
 
     def on_combobox_changed(self, value):
         self.dataset = value
@@ -324,7 +332,7 @@ def load_bil_data(
         }
 
     return (data,meta,'image')
-    
+
 
 def load_bil_swc(url, dataset):
     from neurom import load_morphology
