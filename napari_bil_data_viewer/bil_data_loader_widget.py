@@ -5,7 +5,6 @@ Created on Sun Oct 24 16:49:37 2021
 @author: alpha
 
 Roadmap:
-- Scrollable list of SWCs (if many of them)
 - Improve the performance
 - Migrate to npe2
 - Do loading in separate thread
@@ -151,6 +150,7 @@ class LoadBilData(QWidget):
     def load_swc(self, url=None):
         import numpy as np
         from napari.utils.colormaps.colormap_utils import _color_random
+        from napari.layers.shapes import Shapes
 
         if not url:
             url = self.swc_url
@@ -161,10 +161,10 @@ class LoadBilData(QWidget):
         soma, soma_meta, __ = points
         random_color = _color_random(1, seed=np.random.uniform())
         meta["edge_color"] = random_color
-        if self.tracings_layer and 'neuron tracings' in self.viewer.layers:
-            self.tracings_layer.add_paths(data, edge_color=random_color)
-        else:
-            self.tracings_layer = self.viewer.add_shapes(data, **meta)
+        if not self.tracings_layer or 'neuron tracings' not in self.viewer.layers:
+            self.tracings_layer = Shapes(ndim=3, **meta)
+            self.viewer.layers.append(self.tracings_layer)
+        self.tracings_layer.add_paths(data, edge_color=random_color)
         if self.soma_layer and 'soma' in self.viewer.layers:
             self.soma_layer.add(soma)
         else:
