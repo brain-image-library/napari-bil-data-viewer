@@ -230,15 +230,15 @@ class LoadBilData(QWidget):
         :param url:
         :return:
         """
+        layer_data = self.tracings_layer.data
         url_index = self.visualized_tracings.index(url)
         self.soma_layer.selected_data = set([url_index])
         self.soma_layer.remove_selected()
         start_index = sum(self.neuron_sections[:url_index])
         end_index = start_index + self.neuron_sections[url_index]
         print(start_index, end_index)
-        indices_to_hide = range(start_index, end_index)
-        self.tracings_layer.selected_data = set(indices_to_hide)
-        self.tracings_layer.remove_selected()
+        del layer_data[start_index:end_index]
+        self.tracings_layer.data = layer_data
         self.visualized_tracings.pop(url_index)
         self.neuron_sections.pop(url_index)
 
