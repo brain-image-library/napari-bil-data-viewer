@@ -21,7 +21,8 @@ from bs4 import BeautifulSoup
 from skimage import io
 from dask import delayed
 from .dataset_info import get_datasets
-from qtpy.QtCore import Qt
+from qtpy.QtCore import Qt, QSize
+from qtpy.QtGui import QMovie
 from qtpy.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QPushButton, QLabel, QLineEdit, QCheckBox, QSpacerItem, QScrollArea, QGroupBox, QFormLayout
 )
@@ -44,6 +45,7 @@ class LoadBilData(QWidget):
         self.visualized_tracings = []
         self.neuron_sections = []
         self.load_button = QPushButton("Load Dataset")
+        self.spinner_label = QLabel()
         self.init_ui()
 
     def init_ui(self):
@@ -105,6 +107,7 @@ class LoadBilData(QWidget):
         vbox_swc.addLayout(hbox_show_swc_btn)
         hbox_dataset.addLayout(vbox_dataset)
         hbox_fullresolution.addLayout(vbox_fullresolution)
+
         hbox_logo = QHBoxLayout()
         logo = abspath(__file__, "resources/bil_logo.png")
         bil_logo_label = QLabel(f'<img src="{logo}" width="100" height="75">')
@@ -112,9 +115,21 @@ class LoadBilData(QWidget):
         bil_info_label.setOpenExternalLinks(True)
         hbox_logo.addWidget(bil_logo_label)
         hbox_logo.addWidget(bil_info_label)
+
+        hbox_spinner = QHBoxLayout()
+        spinner_movie = abspath(__file__, "resources/loading.gif")
+        spinner = QMovie(spinner_movie)
+        spinner.setScaledSize(QSize(50, 50))
+        self.spinner_label.setMinimumSize(QSize(50, 50))
+        self.spinner_label.setMaximumSize(QSize(50, 50))
+        self.spinner_label.setMovie(spinner)
+        hbox_spinner.addWidget(self.spinner_label)
+        self.spinner_label.setHidden(True)
+
         hbox_swc.addLayout(vbox_swc)
         vbox_main.addLayout(hbox_logo)
         vbox_main.addItem(QSpacerItem(1, 25))
+        vbox_main.addLayout(hbox_spinner)
         vbox_main.addLayout(hbox_dataset)
         vbox_main.addLayout(hbox_fullresolution)
         vbox_main.addLayout(hbox_swc)
@@ -149,6 +164,8 @@ class LoadBilData(QWidget):
         def _show_img(args):
             data, meta, layer_type = args
             self.viewer.add_image(data, **meta)
+            self.spinner_label.movie().stop()
+            self.spinner_label.setHidden(True)
             self.load_button.setEnabled(True)
 
         @thread_worker(connect={"returned": _show_img})
@@ -156,6 +173,8 @@ class LoadBilData(QWidget):
             return load_bil_data(self.dataset)
 
         self.load_button.setEnabled(False)
+        self.spinner_label.setHidden(False)
+        self.spinner_label.movie().start()
         _load_img()
 
     def on_combobox_changed(self, value):
