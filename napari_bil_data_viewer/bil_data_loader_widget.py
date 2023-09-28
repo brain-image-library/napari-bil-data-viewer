@@ -105,7 +105,15 @@ class LoadBilData(QWidget):
         vbox_swc.addLayout(hbox_show_swc_btn)
         hbox_dataset.addLayout(vbox_dataset)
         hbox_fullresolution.addLayout(vbox_fullresolution)
+        hbox_logo = QHBoxLayout()
+        logo = abspath(__file__, "resources/bil_logo.png")
+        bil_logo_label = QLabel(f'<img src="{logo}" width="100" height="75">')
+        bil_info_label = QLabel('<h2>Brain Image Library</h2> <a href="https://brainimagelibrary.org" style="color:gray;">brainimagelibrary.org</a>')
+        bil_info_label.setOpenExternalLinks(True)
+        hbox_logo.addWidget(bil_logo_label)
+        hbox_logo.addWidget(bil_info_label)
         hbox_swc.addLayout(vbox_swc)
+        vbox_main.addLayout(hbox_logo)
         vbox_main.addLayout(hbox_dataset)
         vbox_main.addLayout(hbox_fullresolution)
         vbox_main.addLayout(hbox_swc)
@@ -394,6 +402,19 @@ def get_next_color():
 
 
 color_generator = get_next_color()
+
+
+def abspath(root, relpath):
+    """
+    Credit to stardist-napari plugin
+    """
+    from pathlib import Path
+    root = Path(root)
+    if root.is_dir():
+        path = root/relpath
+    else:
+        path = root.parent/relpath
+    return str(path.absolute())
 
 
 @napari_hook_implementation
