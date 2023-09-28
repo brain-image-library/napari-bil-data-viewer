@@ -26,7 +26,9 @@ from qtpy.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QPushButton, QLabel, QLineEdit, QCheckBox, QSpacerItem, QScrollArea, QGroupBox, QFormLayout
 )
 from napari.qt.threading import thread_worker
+from napari.utils.colormaps import label_colormap
 
+color_map = label_colormap(num_colors=500, seed=0.5)
 
 class LoadBilData(QWidget):
     def __init__(self, napari_viewer):
@@ -149,7 +151,6 @@ class LoadBilData(QWidget):
 
     def load_swc(self, url=None):
         import numpy as np
-        from napari.utils.colormaps.colormap_utils import _color_random
         from napari.layers.shapes import Shapes
 
         if not url:
@@ -159,12 +160,12 @@ class LoadBilData(QWidget):
         data, meta, __ = shapes
         self.neuron_sections.append(len(data))
         soma, soma_meta, __ = points
-        random_color = _color_random(1, seed=np.random.uniform())
-        meta["edge_color"] = random_color
+        labels_color = next(color_generator)
+        meta["edge_color"] = labels_color[:3].reshape(1, 3)
         if not self.tracings_layer or 'neuron tracings' not in self.viewer.layers:
             self.tracings_layer = Shapes(ndim=3, **meta)
             self.viewer.layers.append(self.tracings_layer)
-        self.tracings_layer.add_paths(data, edge_color=random_color)
+        self.tracings_layer.add_paths(data, edge_color=labels_color)
         if self.soma_layer and 'soma' in self.viewer.layers:
             self.soma_layer.add(soma)
         else:
@@ -382,6 +383,14 @@ def load_bil_swc(url, dataset):
     soma_tuple = (soma, soma_meta, 'points')
     print("Layer data ready. Rendering...")
     return soma_tuple, paths_tuple
+
+
+def get_next_color():
+    for color in color_map.colors[1:]:
+        yield color
+
+
+color_generator = get_next_color()
 
 
 @napari_hook_implementation
