@@ -542,7 +542,7 @@ def get_datasets():
                                   # 'https://download.brainimagelibrary.org/f1/dc/f1dcaeb016197373/355459-18054/red/projection_res'
                           ]},
          '358361-18047': {'contrast_limits': [0, 200],
-                          'scale': (100, 0.23, 0.23),  # TODO: looks wrong
+                          'scale': (100, 0.35, 0.23),
                           'url': [
                                   # 'https://download.brainimagelibrary.org/f1/dc/f1dcaeb016197373/358361-18047/green',   # full_res
                                   'https://download.brainimagelibrary.org/f1/dc/f1dcaeb016197373/358361-18047/green/projection',
@@ -584,16 +584,16 @@ def get_datasets():
                                   # 'https://download.brainimagelibrary.org/ec/d7/ecd76000aad716f8/182683/182683/CH2'
                               ]},
          'mouseID_18011710-18066': {'contrast_limits': [0,  450],
-                                    'scale': (100, 0.23, 0.23),
+                                    'scale': (100, 5, 5),
                                     'url': [
                                         # 'https://download.brainimagelibrary.org/df/8d/df8d3922f971e331/mouseID_18011710-18066/CH1',
-                                        'https://download.brainimagelibrary.org/df/8d/df8d3922f971e331/mouseID_18011710-18066/CH1_projection/projection_0.230um',
+                                        # 'https://download.brainimagelibrary.org/df/8d/df8d3922f971e331/mouseID_18011710-18066/CH1_projection/projection_0.230um',  # TODO causes GL_MAX_TEXTURE_SIZE=32768 error
                                         'https://download.brainimagelibrary.org/df/8d/df8d3922f971e331/mouseID_18011710-18066/CH1_projection/projection_5um']},
-         'mouseID_18011809-18072': {'contrast_limits': [0,  450],
-                                    'scale': (100, 0.35, 0.35),
+         'mouseID_18011809-18072': {'contrast_limits': [0,  1200],
+                                    'scale': (100, 5, 5),
                                     'url': [
                                         # 'https://download.brainimagelibrary.org/73/ec/73ec63a56c799b6a/mouseID_18011809-18072/CH1',
-                                        'https://download.brainimagelibrary.org/73/ec/73ec63a56c799b6a/mouseID_18011809-18072/CH1_projection/projection_0.350um',
+                                        # 'https://download.brainimagelibrary.org/73/ec/73ec63a56c799b6a/mouseID_18011809-18072/CH1_projection/projection_0.350um',  # TODO causes GL_MAX_TEXTURE_SIZE=32768 error
                                         'https://download.brainimagelibrary.org/73/ec/73ec63a56c799b6a/mouseID_18011809-18072/CH1_projection/projection_5um']},
          'mouseID_18011810-18073': {'contrast_limits': [0,  450],
                                     'scale': (100, 0.35, 0.35),
@@ -643,19 +643,19 @@ def get_datasets():
                                         'https://download.brainimagelibrary.org/20/e9/20e90875c9ae4542/mouseID_18082519-18981/CH1_resample_Projection'
                                     ]
                                     },
-         'mouseID_18101517-182280': {'contrast_limits': [0,  450],
-                                     'scale': (100, 0.35, 0.35),
+         'mouseID_18101517-182280': {'contrast_limits': [0,  1000],
+                                     'scale': (100, 5, 5),
                                      'url': [
                                          # 'https://download.brainimagelibrary.org/69/19/6919a5da8261ea78/mouseID_18101517-182280/CH1',  # full res
-                                         'https://download.brainimagelibrary.org/69/19/6919a5da8261ea78/mouseID_18101517-182280/CH1_projection/projection_0.35_100um',
+                                         # 'https://download.brainimagelibrary.org/69/19/6919a5da8261ea78/mouseID_18101517-182280/CH1_projection/projection_0.35_100um',  # TODO GL_MAX_TEXTURE_SIZE=32768
                                          'https://download.brainimagelibrary.org/69/19/6919a5da8261ea78/mouseID_18101517-182280/CH1_projection/projection_5_100um']},
-         'mouseID_18103003-182051': {'contrast_limits': [0,  450],
-                                     'scale': (50, 0.32, 0.32),
+         'mouseID_18103003-182051': {'contrast_limits': [0,  30],
+                                     'scale': (50, 5, 5),
                                      'url': [
                                          # 'https://download.brainimagelibrary.org/e9/a2/e9a2af1aaa175f9b/mouseID_18103003-182051/182051',
                                          # 'https://download.brainimagelibrary.org/e9/a2/e9a2af1aaa175f9b/mouseID_18103003-182051/182051/CH1_projection',
                                          # 'https://download.brainimagelibrary.org/e9/a2/e9a2af1aaa175f9b/mouseID_18103003-182051/CH1',
-                                         'https://download.brainimagelibrary.org/e9/a2/e9a2af1aaa175f9b/mouseID_18103003-182051/CH1_projection/projection_0.32_50um',
+                                         # 'https://download.brainimagelibrary.org/e9/a2/e9a2af1aaa175f9b/mouseID_18103003-182051/CH1_projection/projection_0.32_50um',  # TODO GL_MAX_TEXTURE_SIZE=32768
                                          'https://download.brainimagelibrary.org/e9/a2/e9a2af1aaa175f9b/mouseID_18103003-182051/CH1_projection/projection_5_50um']},
          'mouseID_18103012-182056': {'contrast_limits': [0,  35],
                                      'scale': (50, 0.32, 0.32),
@@ -674,10 +674,10 @@ def get_datasets():
                                          'https://download.brainimagelibrary.org/16/a5/16a50e365f275fc2/mouseID_18110102-182061/CH1_projection/projection_0.32_50um',
                                          'https://download.brainimagelibrary.org/16/a5/16a50e365f275fc2/mouseID_18110102-182061/CH1_projection/projection_5_50um']},
          'mouseID_18110103-182062': {'contrast_limits': [0,  35],
-                                     'scale': (50, 0.32, 0.32),
+                                     'scale': (50, 5, 5),
                                      'url': [
                                          # 'https://download.brainimagelibrary.org/55/50/555003a95bda40ec/mouseID_18110103-182062/CH1',  # full res
-                                         'https://download.brainimagelibrary.org/55/50/555003a95bda40ec/mouseID_18110103-182062/CH1_projection/projection_0.32_50um',
+                                         # 'https://download.brainimagelibrary.org/55/50/555003a95bda40ec/mouseID_18110103-182062/CH1_projection/projection_0.32_50um',  # TODO GL_MAX_TEXTURE_SIZE=32768
                                          'https://download.brainimagelibrary.org/55/50/555003a95bda40ec/mouseID_18110103-182062/CH1_projection/projection_5_50um']},
          'mouseID_18110108-182065': {'contrast_limits': [0,  35],
                                      'scale': (50, 0.32, 0.32),
