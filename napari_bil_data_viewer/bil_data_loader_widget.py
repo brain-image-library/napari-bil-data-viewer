@@ -114,6 +114,7 @@ class LoadBilData(QWidget):
         hbox_logo.addWidget(bil_info_label)
         hbox_swc.addLayout(vbox_swc)
         vbox_main.addLayout(hbox_logo)
+        vbox_main.addItem(QSpacerItem(1, 25))
         vbox_main.addLayout(hbox_dataset)
         vbox_main.addLayout(hbox_fullresolution)
         vbox_main.addLayout(hbox_swc)
