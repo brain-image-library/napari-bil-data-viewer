@@ -30,6 +30,7 @@ from napari.utils.colormaps import label_colormap
 
 color_map = label_colormap(num_colors=500, seed=0.5)
 
+
 class LoadBilData(QWidget):
     def __init__(self, napari_viewer):
         super().__init__()
@@ -42,6 +43,7 @@ class LoadBilData(QWidget):
         self.fullresolution_url = ""
         self.visualized_tracings = []
         self.neuron_sections = []
+        self.load_button = QPushButton("Load Dataset")
         self.init_ui()
 
     def init_ui(self):
@@ -50,7 +52,6 @@ class LoadBilData(QWidget):
         dataset_dropdown = QComboBox()
         dataset_dropdown.addItems(self.datasets)
         dataset_dropdown.currentTextChanged.connect(self.on_combobox_changed)
-        load_button = QPushButton("Load Dataset")
         # ------------------------
         fullresolution_label = QLabel("Visualize Full Resolution:")
         url_input_fullresolution = QLineEdit()
@@ -75,7 +76,7 @@ class LoadBilData(QWidget):
         hbox_dataset_dropdown = QHBoxLayout()
         hbox_dataset_dropdown.addWidget(dataset_dropdown)
         hbox_dataset_load_btn = QHBoxLayout()
-        hbox_dataset_load_btn.addWidget(load_button)
+        hbox_dataset_load_btn.addWidget(self.load_button)
         hbox_fullresolution_label = QHBoxLayout()
         hbox_fullresolution_label.addWidget(fullresolution_label)
         hbox_fullresolution_url_input = QHBoxLayout()
@@ -129,7 +130,7 @@ class LoadBilData(QWidget):
         self.setLayout(vbox_main)
 
         # connect signals and slots
-        load_button.clicked.connect(self.load_dataset)
+        self.load_button.clicked.connect(self.load_dataset)
         # show_swc_button.clicked.connect(self.load_swc)
         show_swc_button.clicked.connect(lambda: self.add_checkboxes(vbox_swc, url_input.text(), swc_checkboxes))
         show_button_fullresolution.clicked.connect(self.load_full_resolution)
@@ -139,11 +140,13 @@ class LoadBilData(QWidget):
         def _show_img(args):
             data, meta, layer_type = args
             self.viewer.add_image(data, **meta)
+            self.load_button.setEnabled(True)
 
         @thread_worker(connect={"returned": _show_img})
         def _load_img():
             return load_bil_data(self.dataset)
 
+        self.load_button.setEnabled(False)
         _load_img()
 
     def on_combobox_changed(self, value):
