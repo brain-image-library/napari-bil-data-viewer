@@ -1477,7 +1477,158 @@ def get_datasets():
                                           # 'https://download.brainimagelibrary.org/00/9c/009c1e6fcc03ebac/mouseID_w19091710-194095/CH1',
                                           'https://download.brainimagelibrary.org/00/9c/009c1e6fcc03ebac/mouseID_w19091710-194095/CH1_0.32_100um',
                                           'https://download.brainimagelibrary.org/00/9c/009c1e6fcc03ebac/mouseID_w19091710-194095/CH1_3.2_100um']},
-
+        '212083': {
+            'contrast_limits': [0, 300],
+            'scale': (100, 0.325, 0.325),
+            'url': [
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/212083/CH1_projection/projection_0.325um',
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/212083/CH1_projection/projection_5um'
+            ]
+        },
+        '212084': {
+            'contrast_limits': [0, 300],
+            'scale': (100, 0.325, 0.325),
+            'url': [
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/212084/CH1_projection/projection_0.325um',
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/212084/CH1_projection/projection_5um'
+            ]
+        },
+        '212085': {
+            'contrast_limits': [0, 300],
+            'scale': (100, 0.325, 0.325),
+            'url': [
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/212085/CH1_projection/projection_0.325um',
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/212085/CH1_projection/projection_5um'
+            ]
+        },
+        '212086': {
+            'contrast_limits': [0, 300],
+            'scale': (100, 0.325, 0.325),
+            'url': [
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/212086/CH1_projection/projection_0.325um',
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/212086/CH1_projection/projection_5um'
+            ]
+        },
+        '212087': {
+            'contrast_limits': [0, 300],
+            'scale': (100, 0.325, 0.325),
+            'url': [
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/212087/CH1_projection/projection_0.325um',
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/212087/CH1_projection/projection_5um'
+            ]
+        },
+        '211043': {
+            'contrast_limits': [0, 300],
+            'scale': (100, 0.325, 0.325),
+            'url': [
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/211043/CH1_projection/projection_0.325um/',
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/211043/CH1_projection/projection_5um/'
+            ]
+        },
+        '211044': {
+            'contrast_limits': [0, 300],
+            'scale': (100, 0.325, 0.325),
+            'url': [
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/211044/CH1_projection/projection_0.325um/',
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/211044/CH1_projection/projection_5um/'
+            ]
+        },
+        '211045': {
+            'contrast_limits': [0, 300],
+            'scale': (100, 0.325, 0.325),
+            'url': [
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/211045/CH1_projection/projection_0.325um/',
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/211045/CH1_projection/projection_5um/'
+            ]
+        },
+        '211046': {
+            'contrast_limits': [0, 300],
+            'scale': (100, 0.325, 0.325),
+            'url': [
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/211046/CH1_projection/projection_0.325um/',
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/211046/CH1_projection/projection_5um/'
+            ]
+        },
+        '211054': {
+            'contrast_limits': [0, 100],
+            'scale': (100, 0.325, 0.325),
+            'url': [
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/211054/CH1_projection/projection_0.325um/',
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/211054/CH1_projection/projection_5um/'
+            ]
+        },
+        '211056': {
+            'contrast_limits': [0, 300],
+            'scale': (100, 0.325, 0.325),
+            'url': [
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/211056/CH1_projection/projection_0.325um/',
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/211056/CH1_projection/projection_5um/'
+            ]
+        },
+        '211060': {
+            'contrast_limits': [0, 300],
+            'scale': (100, 0.325, 0.325),
+            'url': [
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/211060/CH1_projection/projection_0.325um/',
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/211060/CH1_projection/projection_5um/'
+            ]
+        },
+        '211061': {
+            'contrast_limits': [0, 300],
+            'scale': (100, 0.325, 0.325),
+            'url': [
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/211061/CH1_projection/projection_0.325um/',
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/211061/CH1_projection/projection_5um/'
+            ]
+        },
+        '212088': {
+            'contrast_limits': [0, 300],
+            'scale': (100, 0.325, 0.325),
+            'url': [
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/212088/CH1_projection/projection_0.325um/',
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/212088/CH1_projection/projection_5um/'
+            ]
+        },
+        '212089': {
+            'contrast_limits': [0, 300],
+            'scale': (100, 0.325, 0.325),
+            'url': [
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/212089/CH1_projection/projection_0.325um/',
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/212089/CH1_projection/projection_5um/'
+            ]
+        },
+        '212090': {
+            'contrast_limits': [0, 300],
+            'scale': (100, 0.325, 0.325),
+            'url': [
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/212090/CH1_projection/projection_0.325um/',
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/212090/CH1_projection/projection_5um/'
+            ]
+        },
+        '212091': {
+            'contrast_limits': [0, 300],
+            'scale': (100, 0.325, 0.325),
+            'url': [
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/212091/CH1_projection/projection_0.325um/',
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/212091/CH1_projection/projection_5um/'
+            ]
+        },
+        '212092': {
+            'contrast_limits': [0, 300],
+            'scale': (100, 0.325, 0.325),
+            'url': [
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/212092/CH1_projection/projection_0.325um/',
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/212092/CH1_projection/projection_5um/'
+            ]
+        },
+        '212094': {
+            'contrast_limits': [0, 300],
+            'scale': (100, 0.325, 0.325),
+            'url': [
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/212094/CH1_projection/projection_0.325um/',
+                'https://download.brainimagelibrary.org/a9/3c/a93ce7c42b77aaf1/212094/CH1_projection/projection_5um/'
+            ]
+        },
 
         #
         # 'mouseID_': {
