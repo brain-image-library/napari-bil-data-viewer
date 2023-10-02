@@ -5,9 +5,6 @@ Created on Sun Oct 24 16:49:37 2021
 @author: alpha
 
 Roadmap:
-- Scrollable list of SWCs (if many of them)
-- Add more SWC datasets, test them
-- Display both in 2D and 3D
 - Improve the performance
 - Migrate to npe2
 - Do loading in separate thread
@@ -24,8 +21,15 @@ from bs4 import BeautifulSoup
 from skimage import io
 from dask import delayed
 from .dataset_info import get_datasets
-from qtpy.QtCore import Qt
-from qtpy.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QPushButton, QLabel, QLineEdit, QCheckBox, QSpacerItem
+from qtpy.QtCore import Qt, QSize
+from qtpy.QtGui import QMovie
+from qtpy.QtWidgets import (
+    QApplication, QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QPushButton, QLabel, QLineEdit, QCheckBox, QSpacerItem, QScrollArea, QGroupBox, QFormLayout
+)
+from napari.qt.threading import thread_worker
+from napari.utils.colormaps import label_colormap
+
+color_map = label_colormap(num_colors=500, seed=0.5)
 
 
 class LoadBilData(QWidget):
@@ -40,6 +44,8 @@ class LoadBilData(QWidget):
         self.fullresolution_url = ""
         self.visualized_tracings = []
         self.neuron_sections = []
+        self.load_button = QPushButton("Load Dataset")
+        self.spinner_label = QLabel()
         self.init_ui()
 
     def init_ui(self):
@@ -48,7 +54,6 @@ class LoadBilData(QWidget):
         dataset_dropdown = QComboBox()
         dataset_dropdown.addItems(self.datasets)
         dataset_dropdown.currentTextChanged.connect(self.on_combobox_changed)
-        load_button = QPushButton("Load Dataset")
         # ------------------------
         fullresolution_label = QLabel("Visualize Full Resolution:")
         url_input_fullresolution = QLineEdit()
@@ -73,7 +78,7 @@ class LoadBilData(QWidget):
         hbox_dataset_dropdown = QHBoxLayout()
         hbox_dataset_dropdown.addWidget(dataset_dropdown)
         hbox_dataset_load_btn = QHBoxLayout()
-        hbox_dataset_load_btn.addWidget(load_button)
+        hbox_dataset_load_btn.addWidget(self.load_button)
         hbox_fullresolution_label = QHBoxLayout()
         hbox_fullresolution_label.addWidget(fullresolution_label)
         hbox_fullresolution_url_input = QHBoxLayout()
@@ -102,33 +107,82 @@ class LoadBilData(QWidget):
         vbox_swc.addLayout(hbox_show_swc_btn)
         hbox_dataset.addLayout(vbox_dataset)
         hbox_fullresolution.addLayout(vbox_fullresolution)
+
+        hbox_logo = QHBoxLayout()
+        logo = abspath(__file__, "resources/bil_logo.png")
+        bil_logo_label = QLabel(f'<img src="{logo}" width="100" height="75">')
+        bil_info_label = QLabel('<h2>Brain Image Library</h2> <a href="https://brainimagelibrary.org" style="color:gray;">brainimagelibrary.org</a>')
+        bil_info_label.setOpenExternalLinks(True)
+        hbox_logo.addWidget(bil_logo_label)
+        hbox_logo.addWidget(bil_info_label)
+
+        hbox_spinner = QHBoxLayout()
+        spinner_movie = abspath(__file__, "resources/loading.gif")
+        spinner = QMovie(spinner_movie)
+        spinner.setScaledSize(QSize(50, 50))
+        self.spinner_label.setMinimumSize(QSize(50, 50))
+        self.spinner_label.setMaximumSize(QSize(50, 50))
+        self.spinner_label.setMovie(spinner)
+        hbox_spinner.addWidget(self.spinner_label)
+        self.spinner_label.setHidden(True)
+
         hbox_swc.addLayout(vbox_swc)
+        vbox_main.addLayout(hbox_logo)
+        vbox_main.addItem(QSpacerItem(1, 25))
+        vbox_main.addLayout(hbox_spinner)
         vbox_main.addLayout(hbox_dataset)
         vbox_main.addLayout(hbox_fullresolution)
         vbox_main.addLayout(hbox_swc)
 
+        scroll = QScrollArea()
+        mygroupbox = QGroupBox('pre-loaded SWC')
+        myform = QFormLayout()
+        mygroupbox.setLayout(myform)
+        scroll.setWidget(mygroupbox)
+        scroll.setWidgetResizable(True)
+        # scroll.setFixedHeight(300)
+        vscroll = QVBoxLayout()
+        vscroll.addWidget(scroll)
+        hscroll = QHBoxLayout()
+        hscroll.addLayout(vscroll)
+        vbox_main.addLayout(hscroll)
+
+
         # dynamically add checkboxes for SWC files
-        dataset_dropdown.currentIndexChanged.connect(lambda: self.create_swc_checkboxes(dataset_dropdown.currentText(), vbox_swc, swc_checkboxes))
+        dataset_dropdown.currentIndexChanged.connect(lambda: self.create_swc_checkboxes(dataset_dropdown.currentText(), myform, swc_checkboxes))
 
         self.setLayout(vbox_main)
 
         # connect signals and slots
-        load_button.clicked.connect(self.load_dataset)
+        self.load_button.clicked.connect(self.load_dataset)
         # show_swc_button.clicked.connect(self.load_swc)
         show_swc_button.clicked.connect(lambda: self.add_checkboxes(vbox_swc, url_input.text(), swc_checkboxes))
         show_button_fullresolution.clicked.connect(self.load_full_resolution)
 
     def load_dataset(self):
-        data, meta, layer_type = load_bil_data(self.dataset)
-        print("meta", meta)
-        self.viewer.add_image(data, **meta)
+
+        def _show_img(args):
+            data, meta, layer_type = args
+            self.viewer.add_image(data, **meta)
+            self.spinner_label.movie().stop()
+            self.spinner_label.setHidden(True)
+            self.load_button.setEnabled(True)
+
+        @thread_worker(connect={"returned": _show_img})
+        def _load_img():
+            return load_bil_data(self.dataset)
+
+        self.load_button.setEnabled(False)
+        self.spinner_label.setHidden(False)
+        self.spinner_label.movie().start()
+        _load_img()
 
     def on_combobox_changed(self, value):
         self.dataset = value
 
     def load_swc(self, url=None):
         import numpy as np
-        from napari.utils.colormaps.colormap_utils import _color_random
+        from napari.layers.shapes import Shapes
 
         if not url:
             url = self.swc_url
@@ -137,12 +191,12 @@ class LoadBilData(QWidget):
         data, meta, __ = shapes
         self.neuron_sections.append(len(data))
         soma, soma_meta, __ = points
-        random_color = _color_random(1, seed=np.random.uniform())
-        meta["edge_color"] = random_color
-        if self.tracings_layer and 'neuron tracings' in self.viewer.layers:
-            self.tracings_layer.add_paths(data, edge_color=random_color)
-        else:
-            self.tracings_layer = self.viewer.add_shapes(data, **meta)
+        labels_color = next(color_generator)
+        meta["edge_color"] = labels_color[:3].reshape(1, 3)
+        if not self.tracings_layer or 'neuron tracings' not in self.viewer.layers:
+            self.tracings_layer = Shapes(ndim=3, **meta)
+            self.viewer.layers.append(self.tracings_layer)
+        self.tracings_layer.add_paths(data, edge_color=labels_color)
         if self.soma_layer and 'soma' in self.viewer.layers:
             self.soma_layer.add(soma)
         else:
@@ -208,15 +262,15 @@ class LoadBilData(QWidget):
         :param url:
         :return:
         """
+        layer_data = self.tracings_layer.data
         url_index = self.visualized_tracings.index(url)
         self.soma_layer.selected_data = set([url_index])
         self.soma_layer.remove_selected()
         start_index = sum(self.neuron_sections[:url_index])
         end_index = start_index + self.neuron_sections[url_index]
         print(start_index, end_index)
-        indices_to_hide = range(start_index, end_index)
-        self.tracings_layer.selected_data = set(indices_to_hide)
-        self.tracings_layer.remove_selected()
+        del layer_data[start_index:end_index]
+        self.tracings_layer.data = layer_data
         self.visualized_tracings.pop(url_index)
         self.neuron_sections.pop(url_index)
 
@@ -310,7 +364,7 @@ def load_bil_data(
         }
 
     return (data,meta,'image')
-    
+
 
 def load_bil_swc(url, dataset):
     from neurom import load_morphology
@@ -360,6 +414,27 @@ def load_bil_swc(url, dataset):
     soma_tuple = (soma, soma_meta, 'points')
     print("Layer data ready. Rendering...")
     return soma_tuple, paths_tuple
+
+
+def get_next_color():
+    for color in color_map.colors[1:]:
+        yield color
+
+
+color_generator = get_next_color()
+
+
+def abspath(root, relpath):
+    """
+    Credit to stardist-napari plugin
+    """
+    from pathlib import Path
+    root = Path(root)
+    if root.is_dir():
+        path = root/relpath
+    else:
+        path = root.parent/relpath
+    return str(path.absolute())
 
 
 @napari_hook_implementation
