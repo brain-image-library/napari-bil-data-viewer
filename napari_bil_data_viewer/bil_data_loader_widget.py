@@ -11,6 +11,8 @@ Roadmap:
 - Write the tests
 """
 
+import random
+import string
 import napari
 from magicgui import magic_factory
 from napari_plugin_engine import napari_hook_implementation
@@ -42,6 +44,7 @@ class LoadBilData(QWidget):
         self.dataset = self.datasets[0] if len(self.datasets) else None
         self.swc_url = ""
         self.fullresolution_url = ""
+        self.dataset_url = ""
         self.visualized_tracings = []
         self.neuron_sections = []
         self.load_button = QPushButton("Load Dataset")
@@ -54,6 +57,9 @@ class LoadBilData(QWidget):
         dataset_dropdown = QComboBox()
         dataset_dropdown.addItems(self.datasets)
         dataset_dropdown.currentTextChanged.connect(self.on_combobox_changed)
+        dataset_url_input = QLineEdit()
+        dataset_url_input.setPlaceholderText("paste URL")
+        dataset_url_input.textChanged.connect(self.on_dataset_url_changed)
         # ------------------------
         fullresolution_label = QLabel("Visualize Full Resolution:")
         url_input_fullresolution = QLineEdit()
@@ -77,6 +83,8 @@ class LoadBilData(QWidget):
         hbox_dataset_label.addWidget(dataset_label)
         hbox_dataset_dropdown = QHBoxLayout()
         hbox_dataset_dropdown.addWidget(dataset_dropdown)
+        hbox_dataset_url = QHBoxLayout()
+        hbox_dataset_url.addWidget(dataset_url_input)
         hbox_dataset_load_btn = QHBoxLayout()
         hbox_dataset_load_btn.addWidget(self.load_button)
         hbox_fullresolution_label = QHBoxLayout()
@@ -94,6 +102,7 @@ class LoadBilData(QWidget):
         vbox_dataset = QVBoxLayout()
         vbox_dataset.addLayout(hbox_dataset_label)
         vbox_dataset.addLayout(hbox_dataset_dropdown)
+        vbox_dataset.addLayout(hbox_dataset_url)
         vbox_dataset.addLayout(hbox_dataset_load_btn)
         vbox_dataset.addItem(QSpacerItem(1, 50))
         vbox_fullresolution = QVBoxLayout()
@@ -170,7 +179,19 @@ class LoadBilData(QWidget):
 
         @thread_worker(connect={"returned": _show_img})
         def _load_img():
-            return load_bil_data(self.dataset)
+            if self.dataset_url != "":
+                dataset_info = {
+                    'contrast_limits': [0, 65535],
+                    'scale': (1, 1, 1),
+                    'url': [
+                        self.dataset_url
+                    ]
+                }
+                dataset_name = ''.join(random.choices(string.ascii_uppercase + string.ascii_lowercase + string.digits, k=10))
+            else:
+                dataset_info = get_datasets()[self.dataset]
+                dataset_name = self.dataset
+            return load_bil_data(dataset_info, dataset_name)
 
         self.load_button.setEnabled(False)
         self.spinner_label.setHidden(False)
@@ -280,6 +301,9 @@ class LoadBilData(QWidget):
     def load_full_resolution(self):
         self.viewer.open(self.fullresolution_url, plugin="napari-ome-zarr")
 
+    def on_dataset_url_changed(self, value):
+        self.dataset_url = value
+
 
 def get_swc_files(dataset_name):
     from .fMOST_swc import swc_datasets
@@ -306,10 +330,7 @@ def getFilesHttp(url: str, ext: str) -> list:
     return files
 
 
-def load_bil_data(
-    # viewer: napari.Viewer,
-    dataset: str
-) -> 'napari.types.LayerDataTuple':
+def load_bil_data(dataset_info, name):
     
     ''' 
     This panel provides a tool for load pre-determined datasets from BIL
@@ -318,9 +339,7 @@ def load_bil_data(
     Current datasets are fMOST modality which included multi-resolution single-color
     projections.
     '''
-    
-    dataset_info = get_datasets()[dataset]
-    
+
     bilData = dataset_info['url']
     ext = 'tif'
 
@@ -344,10 +363,7 @@ def load_bil_data(
         images = [da.from_delayed(x, sampleImage.shape,dtype=sampleImage.dtype) for x in images]
         images = da.stack(images)
         data[idx] = images
-    
-    
-    
-    name = dataset
+
     scale = dataset_info['scale']
     multiscale = True if len(dataset_info['url']) > 1 else False
     contrast_limits = dataset_info['contrast_limits']
