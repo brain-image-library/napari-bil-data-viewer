@@ -46,7 +46,12 @@ class LoadBilData(QWidget):
         self.neuron_sections = []
         self.load_button = QPushButton("Load Dataset")
         self.spinner_label = QLabel()
+        self.layer_to_adjust_scale = ""
+        self.adjusted_scale_z = 1
+        self.adjusted_scale_y = 1
+        self.adjusted_scale_x = 1
         self.init_ui()
+        napari_viewer.layers.selection.events.changed.connect(self._on_selection)
 
     def init_ui(self):
         # create widgets
@@ -67,6 +72,47 @@ class LoadBilData(QWidget):
         url_input.textChanged.connect(self.on_swc_url_changed)
         show_swc_button = QPushButton("Show SWC")
         swc_checkboxes = []
+
+        # -----------------------
+        hbox_scale_label = QHBoxLayout()
+        scale_label = QLabel("Adjust scale:")
+        hbox_scale_label.addWidget(scale_label)
+
+        hbox_scale = QHBoxLayout()
+        self.z_scale_input = QLineEdit()
+        self.z_scale_input.setPlaceholderText("z")
+        self.z_scale_input.setFixedWidth(100)
+        self.z_scale_input.textChanged.connect(self.on_scale_z_input_changed)
+        self.y_scale_input = QLineEdit()
+        self.y_scale_input.setPlaceholderText("y")
+        self.y_scale_input.setFixedWidth(100)
+        self.y_scale_input.textChanged.connect(self.on_scale_y_input_changed)
+        self.x_scale_input = QLineEdit()
+        self.x_scale_input.setPlaceholderText("x")
+        self.x_scale_input.setFixedWidth(100)
+        self.x_scale_input.textChanged.connect(self.on_scale_x_input_changed)
+        hbox_scale.addWidget(self.z_scale_input)
+        hbox_scale.addWidget(self.y_scale_input)
+        hbox_scale.addWidget(self.x_scale_input)
+
+        hbox_scale_dropdown = QHBoxLayout()
+        self.scale_dropdown = QComboBox()
+        self.scale_dropdown.currentTextChanged.connect(self.on_scale_dropdown_changed)
+        hbox_scale_dropdown.addWidget(self.scale_dropdown)
+
+        hbox_adjust_scale_btn = QHBoxLayout()
+        adjust_scale_btn = QPushButton("Adjust")
+        adjust_scale_btn.clicked.connect(self.adjust_scale)
+        hbox_adjust_scale_btn.addWidget(adjust_scale_btn)
+
+        vbox_scale = QVBoxLayout()
+        vbox_scale.addLayout(hbox_scale_label)
+        vbox_scale.addLayout(hbox_scale_dropdown)
+        vbox_scale.addLayout(hbox_scale)
+        vbox_scale.addLayout(hbox_adjust_scale_btn)
+
+        hbox_scale_controls = QHBoxLayout()
+        hbox_scale_controls.addLayout(vbox_scale)
 
         # create layout
         vbox_main = QVBoxLayout()
@@ -135,10 +181,10 @@ class LoadBilData(QWidget):
         vbox_main.addLayout(hbox_swc)
 
         scroll = QScrollArea()
-        mygroupbox = QGroupBox('pre-loaded SWC')
-        myform = QFormLayout()
-        mygroupbox.setLayout(myform)
-        scroll.setWidget(mygroupbox)
+        swc_groupbox = QGroupBox('pre-loaded SWC')
+        swc_form = QFormLayout()
+        swc_groupbox.setLayout(swc_form)
+        scroll.setWidget(swc_groupbox)
         scroll.setWidgetResizable(True)
         # scroll.setFixedHeight(300)
         vscroll = QVBoxLayout()
@@ -146,10 +192,11 @@ class LoadBilData(QWidget):
         hscroll = QHBoxLayout()
         hscroll.addLayout(vscroll)
         vbox_main.addLayout(hscroll)
-
+        vbox_main.addItem(QSpacerItem(1, 25))
+        vbox_main.addLayout(hbox_scale_controls)
 
         # dynamically add checkboxes for SWC files
-        dataset_dropdown.currentIndexChanged.connect(lambda: self.create_swc_checkboxes(dataset_dropdown.currentText(), myform, swc_checkboxes))
+        dataset_dropdown.currentIndexChanged.connect(lambda: self.create_swc_checkboxes(dataset_dropdown.currentText(), swc_form, swc_checkboxes))
 
         self.setLayout(vbox_main)
 
@@ -279,6 +326,38 @@ class LoadBilData(QWidget):
 
     def load_full_resolution(self):
         self.viewer.open(self.fullresolution_url, plugin="napari-ome-zarr")
+
+    def on_scale_dropdown_changed(self, value):
+        self.layer_to_adjust_scale = value
+        scale_z, scale_y, scale_x = self.viewer.layers[value].scale
+        self.adjusted_scale_z = scale_z
+        self.adjusted_scale_y = scale_y
+        self.adjusted_scale_x = scale_x
+        self.z_scale_input.setText(str(scale_z))
+        self.y_scale_input.setText(str(scale_y))
+        self.x_scale_input.setText(str(scale_x))
+
+    def on_scale_z_input_changed(self, value):
+        self.adjusted_scale_z = value
+
+    def on_scale_y_input_changed(self, value):
+        self.adjusted_scale_y = value
+
+    def on_scale_x_input_changed(self, value):
+        self.adjusted_scale_x = value
+
+    def _on_selection(self):
+        self.scale_dropdown.clear()
+        self.scale_dropdown.addItems([x.name for x in self.viewer.layers])
+
+    def adjust_scale(self):
+        print("test")
+        print("Changing scale to", self.adjusted_scale_z, self.adjusted_scale_y, self.adjusted_scale_x)
+        self.viewer.layers[self.layer_to_adjust_scale].scale = [
+            self.adjusted_scale_z,
+            self.adjusted_scale_y,
+            self.adjusted_scale_x
+        ]
 
 
 def get_swc_files(dataset_name):
