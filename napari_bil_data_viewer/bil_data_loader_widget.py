@@ -58,8 +58,9 @@ class LoadBilData(QWidget):
         dataset_dropdown.addItems(self.datasets)
         dataset_dropdown.currentTextChanged.connect(self.on_combobox_changed)
         dataset_url_input = QLineEdit()
-        dataset_url_input.setPlaceholderText("paste URL")
+        dataset_url_input.setPlaceholderText("paste URL (optional)")
         dataset_url_input.textChanged.connect(self.on_dataset_url_changed)
+        dataset_url_label = QLabel("<strong>OR</strong><br/>paste URL:")
         # ------------------------
         fullresolution_label = QLabel("Visualize Full Resolution:")
         url_input_fullresolution = QLineEdit()
@@ -83,6 +84,8 @@ class LoadBilData(QWidget):
         hbox_dataset_label.addWidget(dataset_label)
         hbox_dataset_dropdown = QHBoxLayout()
         hbox_dataset_dropdown.addWidget(dataset_dropdown)
+        hbox_dataset_url_label = QHBoxLayout()
+        hbox_dataset_url_label.addWidget(dataset_url_label)
         hbox_dataset_url = QHBoxLayout()
         hbox_dataset_url.addWidget(dataset_url_input)
         hbox_dataset_load_btn = QHBoxLayout()
@@ -102,6 +105,7 @@ class LoadBilData(QWidget):
         vbox_dataset = QVBoxLayout()
         vbox_dataset.addLayout(hbox_dataset_label)
         vbox_dataset.addLayout(hbox_dataset_dropdown)
+        vbox_dataset.addLayout(hbox_dataset_url_label)
         vbox_dataset.addLayout(hbox_dataset_url)
         vbox_dataset.addLayout(hbox_dataset_load_btn)
         vbox_dataset.addItem(QSpacerItem(1, 50))
@@ -341,7 +345,7 @@ def load_bil_data(dataset_info, name):
     '''
 
     bilData = dataset_info['url']
-    ext = 'tif'
+    supported_file_types = ['tif', 'tiff', 'jp2']
 
     def getImage(fileObj):
         with fileObj as f:
@@ -351,9 +355,11 @@ def load_bil_data(dataset_info, name):
     
     data = []
     for ii in bilData:
-        images = sorted(getFilesHttp(ii, ext))
-        images = [fsspec.open(x,'rb') for x in images]
-        data.append(images)
+        for ext in supported_file_types:
+            images = sorted(getFilesHttp(ii, ext))
+            if len(images):
+                images = [fsspec.open(x,'rb') for x in images]
+                data.append(images)
     
     
 
