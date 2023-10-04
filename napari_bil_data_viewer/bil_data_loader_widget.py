@@ -75,7 +75,7 @@ class LoadBilData(QWidget):
 
         # -----------------------
         hbox_scale_label = QHBoxLayout()
-        scale_label = QLabel("Adjust scale:")
+        scale_label = QLabel("Adjust Scale:")
         hbox_scale_label.addWidget(scale_label)
 
         hbox_scale = QHBoxLayout()
@@ -328,14 +328,15 @@ class LoadBilData(QWidget):
         self.viewer.open(self.fullresolution_url, plugin="napari-ome-zarr")
 
     def on_scale_dropdown_changed(self, value):
-        self.layer_to_adjust_scale = value
-        scale_z, scale_y, scale_x = self.viewer.layers[value].scale
-        self.adjusted_scale_z = scale_z
-        self.adjusted_scale_y = scale_y
-        self.adjusted_scale_x = scale_x
-        self.z_scale_input.setText(str(scale_z))
-        self.y_scale_input.setText(str(scale_y))
-        self.x_scale_input.setText(str(scale_x))
+        if value != "":
+            self.layer_to_adjust_scale = value
+            scale_z, scale_y, scale_x = self.viewer.layers[value].scale
+            self.adjusted_scale_z = scale_z
+            self.adjusted_scale_y = scale_y
+            self.adjusted_scale_x = scale_x
+            self.z_scale_input.setText(str(scale_z))
+            self.y_scale_input.setText(str(scale_y))
+            self.x_scale_input.setText(str(scale_x))
 
     def on_scale_z_input_changed(self, value):
         self.adjusted_scale_z = value
