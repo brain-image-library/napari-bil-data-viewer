@@ -79,25 +79,37 @@ class LoadBilData(QWidget):
         hbox_scale_label.addWidget(scale_label)
 
         hbox_scale = QHBoxLayout()
+        z_scale_input_label = QLabel("z :")
+        z_scale_input_label.setFixedWidth(20)
         self.z_scale_input = QLineEdit()
-        self.z_scale_input.setPlaceholderText("z")
+        self.z_scale_input.setPlaceholderText("1.0")
         self.z_scale_input.setFixedWidth(100)
         self.z_scale_input.textChanged.connect(self.on_scale_z_input_changed)
+        y_scale_input_label = QLabel("y :")
+        y_scale_input_label.setFixedWidth(20)
         self.y_scale_input = QLineEdit()
-        self.y_scale_input.setPlaceholderText("y")
+        self.y_scale_input.setPlaceholderText("1.0")
         self.y_scale_input.setFixedWidth(100)
         self.y_scale_input.textChanged.connect(self.on_scale_y_input_changed)
+        x_scale_input_label = QLabel("x :")
+        x_scale_input_label.setFixedWidth(20)
         self.x_scale_input = QLineEdit()
-        self.x_scale_input.setPlaceholderText("x")
+        self.x_scale_input.setPlaceholderText("1.0")
         self.x_scale_input.setFixedWidth(100)
         self.x_scale_input.textChanged.connect(self.on_scale_x_input_changed)
+        hbox_scale.addWidget(z_scale_input_label)
         hbox_scale.addWidget(self.z_scale_input)
+        hbox_scale.addWidget(y_scale_input_label)
         hbox_scale.addWidget(self.y_scale_input)
+        hbox_scale.addWidget(x_scale_input_label)
         hbox_scale.addWidget(self.x_scale_input)
 
         hbox_scale_dropdown = QHBoxLayout()
+        scale_dropdown_label = QLabel("layer")
+        scale_dropdown_label.setFixedWidth(50)
         self.scale_dropdown = QComboBox()
         self.scale_dropdown.currentTextChanged.connect(self.on_scale_dropdown_changed)
+        hbox_scale_dropdown.addWidget(scale_dropdown_label)
         hbox_scale_dropdown.addWidget(self.scale_dropdown)
 
         hbox_adjust_scale_btn = QHBoxLayout()
@@ -192,7 +204,7 @@ class LoadBilData(QWidget):
         hscroll = QHBoxLayout()
         hscroll.addLayout(vscroll)
         vbox_main.addLayout(hscroll)
-        vbox_main.addItem(QSpacerItem(1, 25))
+        vbox_main.addItem(QSpacerItem(1, 50))
         vbox_main.addLayout(hbox_scale_controls)
 
         # dynamically add checkboxes for SWC files
@@ -330,7 +342,7 @@ class LoadBilData(QWidget):
     def on_scale_dropdown_changed(self, value):
         if value != "":
             self.layer_to_adjust_scale = value
-            scale_z, scale_y, scale_x = self.viewer.layers[value].scale
+            scale_z, scale_y, scale_x = self.viewer.layers[value].scale[-3:]
             self.adjusted_scale_z = scale_z
             self.adjusted_scale_y = scale_y
             self.adjusted_scale_x = scale_x
@@ -352,8 +364,7 @@ class LoadBilData(QWidget):
         self.scale_dropdown.addItems([x.name for x in self.viewer.layers])
 
     def adjust_scale(self):
-        print("test")
-        print("Changing scale to", self.adjusted_scale_z, self.adjusted_scale_y, self.adjusted_scale_x)
+        print("Changing scale of", self.layer_to_adjust_scale, "to", self.adjusted_scale_z, self.adjusted_scale_y, self.adjusted_scale_x)
         self.viewer.layers[self.layer_to_adjust_scale].scale = [
             self.adjusted_scale_z,
             self.adjusted_scale_y,
