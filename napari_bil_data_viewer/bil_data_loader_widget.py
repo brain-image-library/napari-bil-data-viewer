@@ -51,6 +51,7 @@ class LoadBilData(QWidget):
         self.adjusted_scale_z = 1
         self.adjusted_scale_y = 1
         self.adjusted_scale_x = 1
+        self.swc_checkboxes = []
         self.init_ui()
         napari_viewer.layers.selection.events.changed.connect(self._on_selection)
         napari_viewer.layers.events.removed.connect(self._on_layer_deletion)
@@ -74,7 +75,6 @@ class LoadBilData(QWidget):
         url_input.setPlaceholderText("paste URL")
         url_input.textChanged.connect(self.on_swc_url_changed)
         show_swc_button = QPushButton("Show SWC")
-        swc_checkboxes = []
 
         # -----------------------
         hbox_scale_label = QHBoxLayout()
@@ -211,14 +211,14 @@ class LoadBilData(QWidget):
         vbox_main.addLayout(hbox_scale_controls)
 
         # dynamically add checkboxes for SWC files
-        dataset_dropdown.currentIndexChanged.connect(lambda: self.create_swc_checkboxes(dataset_dropdown.currentText(), swc_form, swc_checkboxes))
+        dataset_dropdown.currentIndexChanged.connect(lambda: self.create_swc_checkboxes(dataset_dropdown.currentText(), swc_form))
 
         self.setLayout(vbox_main)
 
         # connect signals and slots
         self.load_button.clicked.connect(self.load_dataset)
         # show_swc_button.clicked.connect(self.load_swc)
-        show_swc_button.clicked.connect(lambda: self.add_checkboxes(vbox_swc, url_input.text(), swc_checkboxes))
+        show_swc_button.clicked.connect(lambda: self.add_checkboxes(vbox_swc, url_input.text()))
         self.button_fullresolution.clicked.connect(self.load_full_resolution)
 
     def load_dataset(self):
@@ -268,9 +268,9 @@ class LoadBilData(QWidget):
     def on_swc_url_changed(self, value):
         self.swc_url = value
 
-    def create_swc_checkboxes(self, dataset_name, vbox, swc_checkboxes):
+    def create_swc_checkboxes(self, dataset_name, vbox):
         # remove existing checkboxes
-        for checkbox in swc_checkboxes:
+        for checkbox in self.swc_checkboxes:
             vbox.removeWidget(checkbox)
             checkbox.setParent(None)
 
@@ -281,7 +281,7 @@ class LoadBilData(QWidget):
         for swc_file in swc_files:
             checkbox = QCheckBox(shorten_swc_path(swc_file))
             vbox.addWidget(checkbox)
-            swc_checkboxes.append(checkbox)
+            self.swc_checkboxes.append(checkbox)
             checkbox.stateChanged.connect(lambda state, path=swc_file: self.visualize_swc(path, state))
 
     def visualize_swc(self, path_to_swc, state):
@@ -293,28 +293,28 @@ class LoadBilData(QWidget):
             print(f"Hiding {path_to_swc}")
             self.hide_swc(path_to_swc)
 
-    def add_checkbox(self, vbox, swc_file_path, swc_checkboxes):
+    def add_checkbox(self, vbox, swc_file_path):
         if swc_file_path:
             checkbox = QCheckBox(shorten_swc_path(swc_file_path))
             checkbox.setChecked(True)
             vbox.addWidget(checkbox)
             checkbox.stateChanged.connect(lambda state, path=swc_file_path: self.visualize_swc(path, state))
-            swc_checkboxes.append(checkbox)
+            self.swc_checkboxes.append(checkbox)
             self.load_swc(swc_file_path)
 
-    def add_checkboxes(self, vbox, url, swc_checkboxes):
+    def add_checkboxes(self, vbox, url):
         # Check if the URL leads to a folder or a file
         if url.endswith('.swc'):
-            self.add_checkbox(vbox, url, swc_checkboxes)
+            self.add_checkbox(vbox, url)
         else:
             # assume folder with swc
             swc_files = getFilesHttp(url, 'swc')
-            self.add_folder_checkboxes(vbox, swc_files, swc_checkboxes)
+            self.add_folder_checkboxes(vbox, swc_files)
 
-    def add_folder_checkboxes(self, vbox, swc_files, swc_checkboxes):
+    def add_folder_checkboxes(self, vbox, swc_files):
         # add a checkbox for each SWC file when URL points to a folder with multiple swc
         for swc_file in swc_files:
-            self.add_checkbox(vbox, swc_file, swc_checkboxes)
+            self.add_checkbox(vbox, swc_file)
 
     def hide_swc(self, url):
         """
@@ -397,9 +397,16 @@ class LoadBilData(QWidget):
         self.z_scale_input.clear()
         self.y_scale_input.clear()
         self.x_scale_input.clear()
+        layer_name = e.value.name
+        if layer_name == 'soma' or layer_name == 'neuron tracings':
+            self.uncheck_swc_checkboxes()
 
     def _pre_layer_deletion(self, e):
         pass
+
+    def uncheck_swc_checkboxes(self):
+        for checkbox in self.swc_checkboxes:
+            checkbox.setChecked(False)
 
 
 def get_swc_files(dataset_name):
