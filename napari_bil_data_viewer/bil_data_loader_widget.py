@@ -15,8 +15,8 @@ import napari
 from magicgui import magic_factory
 from napari_plugin_engine import napari_hook_implementation
 import dask.array as da
-# from napari.layers import Image
-import fsspec, requests
+import fsspec
+import requests
 from bs4 import BeautifulSoup
 from skimage import io
 from dask import delayed
@@ -26,6 +26,7 @@ from qtpy.QtGui import QMovie
 from qtpy.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QPushButton, QLabel, QLineEdit, QCheckBox, QSpacerItem, QScrollArea, QGroupBox, QFormLayout
 )
+from napari.plugins.io import read_data_with_plugins
 from napari.qt.threading import thread_worker
 from napari.utils.colormaps import label_colormap
 
@@ -64,7 +65,7 @@ class LoadBilData(QWidget):
         url_input_fullresolution = QLineEdit()
         url_input_fullresolution.setPlaceholderText("paste URL")
         url_input_fullresolution.textChanged.connect(self.on_fullresolution_url_changed)
-        show_button_fullresolution = QPushButton("Load Full Resolution")
+        self.button_fullresolution = QPushButton("Load Full Resolution")
         # ------------------------
         visualize_label = QLabel("Visualize SWC:")
         url_input = QLineEdit()
@@ -142,7 +143,7 @@ class LoadBilData(QWidget):
         hbox_fullresolution_url_input = QHBoxLayout()
         hbox_fullresolution_url_input.addWidget(url_input_fullresolution)
         hbox_fullresolution_show_button = QHBoxLayout()
-        hbox_fullresolution_show_button.addWidget(show_button_fullresolution)
+        hbox_fullresolution_show_button.addWidget(self.button_fullresolution)
         hbox_swc_label = QHBoxLayout()
         hbox_swc_label.addWidget(visualize_label)
         hbox_url_input = QHBoxLayout()
@@ -216,7 +217,7 @@ class LoadBilData(QWidget):
         self.load_button.clicked.connect(self.load_dataset)
         # show_swc_button.clicked.connect(self.load_swc)
         show_swc_button.clicked.connect(lambda: self.add_checkboxes(vbox_swc, url_input.text(), swc_checkboxes))
-        show_button_fullresolution.clicked.connect(self.load_full_resolution)
+        self.button_fullresolution.clicked.connect(self.load_full_resolution)
 
     def load_dataset(self):
 
@@ -340,16 +341,21 @@ class LoadBilData(QWidget):
         def _show_img(layers):
             for layer in layers:
                 data, meta, layer_type = layer
-                self.viewer.add_image(data, **meta)
+                self.viewer.add_image(data, **meta)  # list of layers
+            self.spinner_label.movie().stop()
+            self.spinner_label.setHidden(True)
+            self.button_fullresolution.setEnabled(True)
 
         @thread_worker(connect={"returned": _show_img})
         def _load_img():
-            from napari.plugins.io import read_data_with_plugins
             layer_data, hookimpl = read_data_with_plugins(
                 [self.fullresolution_url], plugin="napari-ome-zarr", stack=False
             )
             return layer_data
 
+        self.button_fullresolution.setEnabled(False)
+        self.spinner_label.setHidden(False)
+        self.spinner_label.movie().start()
         _load_img()
 
     def on_scale_dropdown_changed(self, value):
