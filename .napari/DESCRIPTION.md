@@ -117,3 +117,7 @@ Added support for SWC neuron tracings
 <u>**v0.3.0:**</u>
 
 Added support for multiscale OME zarr data
+
+<u>**v0.4.0:**</u>
+
+Add scale controls for layers
