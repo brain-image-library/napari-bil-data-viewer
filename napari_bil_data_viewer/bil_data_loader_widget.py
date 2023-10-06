@@ -337,7 +337,20 @@ class LoadBilData(QWidget):
         self.fullresolution_url = value
 
     def load_full_resolution(self):
-        self.viewer.open(self.fullresolution_url, plugin="napari-ome-zarr")
+        def _show_img(layers):
+            for layer in layers:
+                data, meta, layer_type = layer
+                self.viewer.add_image(data, **meta)
+
+        @thread_worker(connect={"returned": _show_img})
+        def _load_img():
+            from napari.plugins.io import read_data_with_plugins
+            layer_data, hookimpl = read_data_with_plugins(
+                [self.fullresolution_url], plugin="napari-ome-zarr", stack=False
+            )
+            return layer_data
+
+        _load_img()
 
     def on_scale_dropdown_changed(self, value):
         if value != "":
