@@ -17,8 +17,8 @@ import napari
 from magicgui import magic_factory
 from napari_plugin_engine import napari_hook_implementation
 import dask.array as da
-# from napari.layers import Image
-import fsspec, requests
+import fsspec
+import requests
 from bs4 import BeautifulSoup
 from skimage import io
 from dask import delayed
@@ -28,6 +28,7 @@ from qtpy.QtGui import QMovie
 from qtpy.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QPushButton, QLabel, QLineEdit, QCheckBox, QSpacerItem, QScrollArea, QGroupBox, QFormLayout
 )
+from napari.plugins.io import read_data_with_plugins
 from napari.qt.threading import thread_worker
 from napari.utils.colormaps import label_colormap
 
@@ -49,7 +50,15 @@ class LoadBilData(QWidget):
         self.neuron_sections = []
         self.load_button = QPushButton("Load Dataset")
         self.spinner_label = QLabel()
+        self.layer_to_adjust_scale = ""
+        self.adjusted_scale_z = 1
+        self.adjusted_scale_y = 1
+        self.adjusted_scale_x = 1
+        self.swc_checkboxes = []
         self.init_ui()
+        napari_viewer.layers.selection.events.changed.connect(self._on_selection)
+        napari_viewer.layers.events.removed.connect(self._on_layer_deletion)
+        napari_viewer.layers.events.removing.connect(self._pre_layer_deletion)
 
     def init_ui(self):
         # create widgets
@@ -66,14 +75,66 @@ class LoadBilData(QWidget):
         url_input_fullresolution = QLineEdit()
         url_input_fullresolution.setPlaceholderText("paste URL")
         url_input_fullresolution.textChanged.connect(self.on_fullresolution_url_changed)
-        show_button_fullresolution = QPushButton("Load Full Resolution")
+        self.button_fullresolution = QPushButton("Load Full Resolution")
         # ------------------------
         visualize_label = QLabel("Visualize SWC:")
         url_input = QLineEdit()
         url_input.setPlaceholderText("paste URL")
         url_input.textChanged.connect(self.on_swc_url_changed)
         show_swc_button = QPushButton("Show SWC")
-        swc_checkboxes = []
+
+        # -----------------------
+        hbox_scale_label = QHBoxLayout()
+        scale_label = QLabel("Adjust Scale:")
+        hbox_scale_label.addWidget(scale_label)
+
+        hbox_scale = QHBoxLayout()
+        z_scale_input_label = QLabel("z :")
+        z_scale_input_label.setFixedWidth(20)
+        self.z_scale_input = QLineEdit()
+        self.z_scale_input.setPlaceholderText("1.0")
+        self.z_scale_input.setFixedWidth(100)
+        self.z_scale_input.textChanged.connect(self.on_scale_z_input_changed)
+        y_scale_input_label = QLabel("y :")
+        y_scale_input_label.setFixedWidth(20)
+        self.y_scale_input = QLineEdit()
+        self.y_scale_input.setPlaceholderText("1.0")
+        self.y_scale_input.setFixedWidth(100)
+        self.y_scale_input.textChanged.connect(self.on_scale_y_input_changed)
+        x_scale_input_label = QLabel("x :")
+        x_scale_input_label.setFixedWidth(20)
+        self.x_scale_input = QLineEdit()
+        self.x_scale_input.setPlaceholderText("1.0")
+        self.x_scale_input.setFixedWidth(100)
+        self.x_scale_input.textChanged.connect(self.on_scale_x_input_changed)
+        hbox_scale.addWidget(z_scale_input_label)
+        hbox_scale.addWidget(self.z_scale_input)
+        hbox_scale.addWidget(y_scale_input_label)
+        hbox_scale.addWidget(self.y_scale_input)
+        hbox_scale.addWidget(x_scale_input_label)
+        hbox_scale.addWidget(self.x_scale_input)
+
+        hbox_scale_dropdown = QHBoxLayout()
+        scale_dropdown_label = QLabel("layer")
+        scale_dropdown_label.setFixedWidth(50)
+        self.scale_dropdown = QComboBox()
+        self.scale_dropdown.currentTextChanged.connect(self.on_scale_dropdown_changed)
+        hbox_scale_dropdown.addWidget(scale_dropdown_label)
+        hbox_scale_dropdown.addWidget(self.scale_dropdown)
+
+        hbox_adjust_scale_btn = QHBoxLayout()
+        adjust_scale_btn = QPushButton("Adjust")
+        adjust_scale_btn.clicked.connect(self.adjust_scale)
+        hbox_adjust_scale_btn.addWidget(adjust_scale_btn)
+
+        vbox_scale = QVBoxLayout()
+        vbox_scale.addLayout(hbox_scale_label)
+        vbox_scale.addLayout(hbox_scale_dropdown)
+        vbox_scale.addLayout(hbox_scale)
+        vbox_scale.addLayout(hbox_adjust_scale_btn)
+
+        hbox_scale_controls = QHBoxLayout()
+        hbox_scale_controls.addLayout(vbox_scale)
 
         # create layout
         vbox_main = QVBoxLayout()
@@ -95,7 +156,7 @@ class LoadBilData(QWidget):
         hbox_fullresolution_url_input = QHBoxLayout()
         hbox_fullresolution_url_input.addWidget(url_input_fullresolution)
         hbox_fullresolution_show_button = QHBoxLayout()
-        hbox_fullresolution_show_button.addWidget(show_button_fullresolution)
+        hbox_fullresolution_show_button.addWidget(self.button_fullresolution)
         hbox_swc_label = QHBoxLayout()
         hbox_swc_label.addWidget(visualize_label)
         hbox_url_input = QHBoxLayout()
@@ -148,10 +209,10 @@ class LoadBilData(QWidget):
         vbox_main.addLayout(hbox_swc)
 
         scroll = QScrollArea()
-        mygroupbox = QGroupBox('pre-loaded SWC')
-        myform = QFormLayout()
-        mygroupbox.setLayout(myform)
-        scroll.setWidget(mygroupbox)
+        swc_groupbox = QGroupBox('pre-loaded SWC')
+        swc_form = QFormLayout()
+        swc_groupbox.setLayout(swc_form)
+        scroll.setWidget(swc_groupbox)
         scroll.setWidgetResizable(True)
         # scroll.setFixedHeight(300)
         vscroll = QVBoxLayout()
@@ -159,18 +220,19 @@ class LoadBilData(QWidget):
         hscroll = QHBoxLayout()
         hscroll.addLayout(vscroll)
         vbox_main.addLayout(hscroll)
-
+        vbox_main.addItem(QSpacerItem(1, 50))
+        vbox_main.addLayout(hbox_scale_controls)
 
         # dynamically add checkboxes for SWC files
-        dataset_dropdown.currentIndexChanged.connect(lambda: self.create_swc_checkboxes(dataset_dropdown.currentText(), myform, swc_checkboxes))
+        dataset_dropdown.currentIndexChanged.connect(lambda: self.create_swc_checkboxes(dataset_dropdown.currentText(), swc_form))
 
         self.setLayout(vbox_main)
 
         # connect signals and slots
         self.load_button.clicked.connect(self.load_dataset)
         # show_swc_button.clicked.connect(self.load_swc)
-        show_swc_button.clicked.connect(lambda: self.add_checkboxes(vbox_swc, url_input.text(), swc_checkboxes))
-        show_button_fullresolution.clicked.connect(self.load_full_resolution)
+        show_swc_button.clicked.connect(lambda: self.add_checkboxes(vbox_swc, url_input.text()))
+        self.button_fullresolution.clicked.connect(self.load_full_resolution)
 
     def load_dataset(self):
 
@@ -231,9 +293,9 @@ class LoadBilData(QWidget):
     def on_swc_url_changed(self, value):
         self.swc_url = value
 
-    def create_swc_checkboxes(self, dataset_name, vbox, swc_checkboxes):
+    def create_swc_checkboxes(self, dataset_name, vbox):
         # remove existing checkboxes
-        for checkbox in swc_checkboxes:
+        for checkbox in self.swc_checkboxes:
             vbox.removeWidget(checkbox)
             checkbox.setParent(None)
 
@@ -244,7 +306,7 @@ class LoadBilData(QWidget):
         for swc_file in swc_files:
             checkbox = QCheckBox(shorten_swc_path(swc_file))
             vbox.addWidget(checkbox)
-            swc_checkboxes.append(checkbox)
+            self.swc_checkboxes.append(checkbox)
             checkbox.stateChanged.connect(lambda state, path=swc_file: self.visualize_swc(path, state))
 
     def visualize_swc(self, path_to_swc, state):
@@ -256,28 +318,28 @@ class LoadBilData(QWidget):
             print(f"Hiding {path_to_swc}")
             self.hide_swc(path_to_swc)
 
-    def add_checkbox(self, vbox, swc_file_path, swc_checkboxes):
+    def add_checkbox(self, vbox, swc_file_path):
         if swc_file_path:
             checkbox = QCheckBox(shorten_swc_path(swc_file_path))
             checkbox.setChecked(True)
             vbox.addWidget(checkbox)
             checkbox.stateChanged.connect(lambda state, path=swc_file_path: self.visualize_swc(path, state))
-            swc_checkboxes.append(checkbox)
+            self.swc_checkboxes.append(checkbox)
             self.load_swc(swc_file_path)
 
-    def add_checkboxes(self, vbox, url, swc_checkboxes):
+    def add_checkboxes(self, vbox, url):
         # Check if the URL leads to a folder or a file
         if url.endswith('.swc'):
-            self.add_checkbox(vbox, url, swc_checkboxes)
+            self.add_checkbox(vbox, url)
         else:
             # assume folder with swc
             swc_files = getFilesHttp(url, 'swc')
-            self.add_folder_checkboxes(vbox, swc_files, swc_checkboxes)
+            self.add_folder_checkboxes(vbox, swc_files)
 
-    def add_folder_checkboxes(self, vbox, swc_files, swc_checkboxes):
+    def add_folder_checkboxes(self, vbox, swc_files):
         # add a checkbox for each SWC file when URL points to a folder with multiple swc
         for swc_file in swc_files:
-            self.add_checkbox(vbox, swc_file, swc_checkboxes)
+            self.add_checkbox(vbox, swc_file)
 
     def hide_swc(self, url):
         """
@@ -303,7 +365,73 @@ class LoadBilData(QWidget):
         self.fullresolution_url = value
 
     def load_full_resolution(self):
-        self.viewer.open(self.fullresolution_url, plugin="napari-ome-zarr")
+        def _show_img(layers):
+            for layer in layers:
+                data, meta, layer_type = layer
+                self.viewer.add_image(data, **meta)  # list of layers
+            self.spinner_label.movie().stop()
+            self.spinner_label.setHidden(True)
+            self.button_fullresolution.setEnabled(True)
+
+        @thread_worker(connect={"returned": _show_img})
+        def _load_img():
+            layer_data, hookimpl = read_data_with_plugins(
+                [self.fullresolution_url], plugin="napari-ome-zarr", stack=False
+            )
+            return layer_data
+
+        self.button_fullresolution.setEnabled(False)
+        self.spinner_label.setHidden(False)
+        self.spinner_label.movie().start()
+        _load_img()
+
+    def on_scale_dropdown_changed(self, value):
+        if value != "":
+            self.layer_to_adjust_scale = value
+            scale_z, scale_y, scale_x = self.viewer.layers[value].scale[-3:]
+            self.adjusted_scale_z = scale_z
+            self.adjusted_scale_y = scale_y
+            self.adjusted_scale_x = scale_x
+            self.z_scale_input.setText(str(scale_z))
+            self.y_scale_input.setText(str(scale_y))
+            self.x_scale_input.setText(str(scale_x))
+
+    def on_scale_z_input_changed(self, value):
+        self.adjusted_scale_z = value
+
+    def on_scale_y_input_changed(self, value):
+        self.adjusted_scale_y = value
+
+    def on_scale_x_input_changed(self, value):
+        self.adjusted_scale_x = value
+
+    def _on_selection(self):
+        self.scale_dropdown.clear()
+        self.scale_dropdown.addItems([x.name for x in self.viewer.layers])
+
+    def adjust_scale(self):
+        print("Changing scale of", self.layer_to_adjust_scale, "to", self.adjusted_scale_z, self.adjusted_scale_y, self.adjusted_scale_x)
+        self.viewer.layers[self.layer_to_adjust_scale].scale = [
+            self.adjusted_scale_z,
+            self.adjusted_scale_y,
+            self.adjusted_scale_x
+        ]
+
+    def _on_layer_deletion(self, e):
+        self.scale_dropdown.clear()
+        self.z_scale_input.clear()
+        self.y_scale_input.clear()
+        self.x_scale_input.clear()
+        layer_name = e.value.name
+        if layer_name == 'soma' or layer_name == 'neuron tracings':
+            self.uncheck_swc_checkboxes()
+
+    def _pre_layer_deletion(self, e):
+        pass
+
+    def uncheck_swc_checkboxes(self):
+        for checkbox in self.swc_checkboxes:
+            checkbox.setChecked(False)
 
     def on_dataset_url_changed(self, value):
         self.dataset_url = value
