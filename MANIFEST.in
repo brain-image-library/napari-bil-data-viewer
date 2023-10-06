@@ -2,5 +2,7 @@ include LICENSE
 include README.md
 include requirements.txt
 
+recursive-include napari_bil_data_viewer/resources *
+
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
