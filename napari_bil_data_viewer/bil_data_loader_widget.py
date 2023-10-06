@@ -53,6 +53,8 @@ class LoadBilData(QWidget):
         self.adjusted_scale_x = 1
         self.init_ui()
         napari_viewer.layers.selection.events.changed.connect(self._on_selection)
+        napari_viewer.layers.events.removed.connect(self._on_layer_deletion)
+        napari_viewer.layers.events.removing.connect(self._pre_layer_deletion)
 
     def init_ui(self):
         # create widgets
@@ -389,6 +391,15 @@ class LoadBilData(QWidget):
             self.adjusted_scale_y,
             self.adjusted_scale_x
         ]
+
+    def _on_layer_deletion(self, e):
+        self.scale_dropdown.clear()
+        self.z_scale_input.clear()
+        self.y_scale_input.clear()
+        self.x_scale_input.clear()
+
+    def _pre_layer_deletion(self, e):
+        pass
 
 
 def get_swc_files(dataset_name):
