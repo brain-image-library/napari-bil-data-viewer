@@ -76,14 +76,8 @@ class LoadBilData(QWidget):
         url_input_fullresolution.setPlaceholderText("paste URL")
         url_input_fullresolution.textChanged.connect(self.on_fullresolution_url_changed)
         self.button_fullresolution = QPushButton("Load Full Resolution")
-        # ------------------------
-        visualize_label = QLabel("Visualize SWC:")
-        url_input = QLineEdit()
-        url_input.setPlaceholderText("paste URL")
-        url_input.textChanged.connect(self.on_swc_url_changed)
-        show_swc_button = QPushButton("Show SWC")
 
-        # -----------------------
+        # ----------------------- Scale Controls -----------------------
         hbox_scale_label = QHBoxLayout()
         scale_label = QLabel("Adjust Scale:")
         hbox_scale_label.addWidget(scale_label)
@@ -136,11 +130,57 @@ class LoadBilData(QWidget):
         hbox_scale_controls = QHBoxLayout()
         hbox_scale_controls.addLayout(vbox_scale)
 
-        # create layout
+        # ----------------------- SWC controls -----------------------
+        visualize_label = QLabel("Visualize SWC:")
+        swc_url_label = QLabel("<strong>OR</strong><br/>paste URL:")
+        hbox_swc_url_label = QHBoxLayout()
+        hbox_swc_url_label.addWidget(swc_url_label)
+
+        swc_url_input = QLineEdit()
+        swc_url_input.setPlaceholderText("paste URL (optional)")
+        swc_url_input.textChanged.connect(self.on_swc_url_changed)
+        show_swc_button = QPushButton("Show SWC")
+        show_swc_button.clicked.connect(lambda: self.add_checkboxes(vbox_swc, swc_url_input.text()))
+
+        hbox_show_swc_btn = QHBoxLayout()
+        hbox_show_swc_btn.addWidget(show_swc_button)
+
+        hbox_swc_url_input = QHBoxLayout()
+        hbox_swc_url_input.addWidget(swc_url_input)
+
+        hbox_swc_label = QHBoxLayout()
+        hbox_swc_label.addWidget(visualize_label)
+
+        vbox_swc = QVBoxLayout()
+        # vbox_swc.addLayout(hbox_swc_label)
+        vbox_swc.addLayout(hbox_swc_url_label)
+        vbox_swc.addLayout(hbox_swc_url_input)
+        vbox_swc.addLayout(hbox_show_swc_btn)
+
+        hbox_swc = QHBoxLayout()
+        hbox_swc.addLayout(vbox_swc)
+
+        scroll = QScrollArea()
+        swc_groupbox = QGroupBox('pre-loaded SWC')
+        swc_form = QFormLayout()
+        swc_groupbox.setLayout(swc_form)
+        scroll.setWidget(swc_groupbox)
+        scroll.setWidgetResizable(True)
+        # scroll.setFixedHeight(300)
+        vscroll = QVBoxLayout()
+        vscroll.addWidget(scroll)
+        hscroll = QHBoxLayout()
+        hscroll.addLayout(vscroll)
+        vbox_scrollarea = QVBoxLayout()
+        vbox_scrollarea.addLayout(hbox_swc_label)
+        vbox_scrollarea.addLayout(hscroll)
+        hbox_scrollarea = QHBoxLayout()
+        hbox_scrollarea.addLayout(vbox_scrollarea)
+
+        # ----------------------- Create layout -----------------------
         vbox_main = QVBoxLayout()
         hbox_dataset = QHBoxLayout()
         hbox_fullresolution = QHBoxLayout()
-        hbox_swc = QHBoxLayout()
         hbox_dataset_label = QHBoxLayout()
         hbox_dataset_label.addWidget(dataset_label)
         hbox_dataset_dropdown = QHBoxLayout()
@@ -157,15 +197,11 @@ class LoadBilData(QWidget):
         hbox_fullresolution_url_input.addWidget(url_input_fullresolution)
         hbox_fullresolution_show_button = QHBoxLayout()
         hbox_fullresolution_show_button.addWidget(self.button_fullresolution)
-        hbox_swc_label = QHBoxLayout()
-        hbox_swc_label.addWidget(visualize_label)
-        hbox_url_input = QHBoxLayout()
-        hbox_url_input.addWidget(url_input)
-        hbox_show_swc_btn = QHBoxLayout()
-        hbox_show_swc_btn.addWidget(show_swc_button)
+
         vbox_dataset = QVBoxLayout()
         vbox_dataset.addLayout(hbox_dataset_label)
         vbox_dataset.addLayout(hbox_dataset_dropdown)
+        vbox_dataset.addItem(QSpacerItem(1, 10))
         vbox_dataset.addLayout(hbox_dataset_url_label)
         vbox_dataset.addLayout(hbox_dataset_url)
         vbox_dataset.addLayout(hbox_dataset_load_btn)
@@ -175,10 +211,7 @@ class LoadBilData(QWidget):
         vbox_fullresolution.addLayout(hbox_fullresolution_url_input)
         vbox_fullresolution.addLayout(hbox_fullresolution_show_button)
         vbox_fullresolution.addItem(QSpacerItem(1, 50))
-        vbox_swc = QVBoxLayout()
-        vbox_swc.addLayout(hbox_swc_label)
-        vbox_swc.addLayout(hbox_url_input)
-        vbox_swc.addLayout(hbox_show_swc_btn)
+
         hbox_dataset.addLayout(vbox_dataset)
         hbox_fullresolution.addLayout(vbox_fullresolution)
 
@@ -200,26 +233,14 @@ class LoadBilData(QWidget):
         hbox_spinner.addWidget(self.spinner_label)
         self.spinner_label.setHidden(True)
 
-        hbox_swc.addLayout(vbox_swc)
         vbox_main.addLayout(hbox_logo)
         vbox_main.addItem(QSpacerItem(1, 25))
         vbox_main.addLayout(hbox_spinner)
         vbox_main.addLayout(hbox_dataset)
         vbox_main.addLayout(hbox_fullresolution)
+        vbox_main.addLayout(hbox_scrollarea)
+        vbox_main.addItem(QSpacerItem(1, 10))
         vbox_main.addLayout(hbox_swc)
-
-        scroll = QScrollArea()
-        swc_groupbox = QGroupBox('pre-loaded SWC')
-        swc_form = QFormLayout()
-        swc_groupbox.setLayout(swc_form)
-        scroll.setWidget(swc_groupbox)
-        scroll.setWidgetResizable(True)
-        # scroll.setFixedHeight(300)
-        vscroll = QVBoxLayout()
-        vscroll.addWidget(scroll)
-        hscroll = QHBoxLayout()
-        hscroll.addLayout(vscroll)
-        vbox_main.addLayout(hscroll)
         vbox_main.addItem(QSpacerItem(1, 50))
         vbox_main.addLayout(hbox_scale_controls)
 
@@ -231,7 +252,6 @@ class LoadBilData(QWidget):
         # connect signals and slots
         self.load_button.clicked.connect(self.load_dataset)
         # show_swc_button.clicked.connect(self.load_swc)
-        show_swc_button.clicked.connect(lambda: self.add_checkboxes(vbox_swc, url_input.text()))
         self.button_fullresolution.clicked.connect(self.load_full_resolution)
 
     def load_dataset(self):
