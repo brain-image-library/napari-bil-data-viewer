@@ -11,6 +11,8 @@ Roadmap:
 - Write the tests
 """
 
+import random
+import string
 import napari
 from magicgui import magic_factory
 from napari_plugin_engine import napari_hook_implementation
@@ -43,6 +45,7 @@ class LoadBilData(QWidget):
         self.dataset = self.datasets[0] if len(self.datasets) else None
         self.swc_url = ""
         self.fullresolution_url = ""
+        self.dataset_url = ""
         self.visualized_tracings = []
         self.neuron_sections = []
         self.load_button = QPushButton("Load Dataset")
@@ -63,20 +66,18 @@ class LoadBilData(QWidget):
         dataset_dropdown = QComboBox()
         dataset_dropdown.addItems(self.datasets)
         dataset_dropdown.currentTextChanged.connect(self.on_combobox_changed)
+        dataset_url_input = QLineEdit()
+        dataset_url_input.setPlaceholderText("paste URL (optional)")
+        dataset_url_input.textChanged.connect(self.on_dataset_url_changed)
+        dataset_url_label = QLabel("<strong>OR</strong><br/>paste URL:")
         # ------------------------
         fullresolution_label = QLabel("Visualize Full Resolution:")
         url_input_fullresolution = QLineEdit()
         url_input_fullresolution.setPlaceholderText("paste URL")
         url_input_fullresolution.textChanged.connect(self.on_fullresolution_url_changed)
         self.button_fullresolution = QPushButton("Load Full Resolution")
-        # ------------------------
-        visualize_label = QLabel("Visualize SWC:")
-        url_input = QLineEdit()
-        url_input.setPlaceholderText("paste URL")
-        url_input.textChanged.connect(self.on_swc_url_changed)
-        show_swc_button = QPushButton("Show SWC")
 
-        # -----------------------
+        # ----------------------- Scale Controls -----------------------
         hbox_scale_label = QHBoxLayout()
         scale_label = QLabel("Adjust Scale:")
         hbox_scale_label.addWidget(scale_label)
@@ -129,15 +130,65 @@ class LoadBilData(QWidget):
         hbox_scale_controls = QHBoxLayout()
         hbox_scale_controls.addLayout(vbox_scale)
 
-        # create layout
+        # ----------------------- SWC controls -----------------------
+        visualize_label = QLabel("Visualize SWC:")
+        swc_url_label = QLabel("<strong>OR</strong><br/>paste URL:")
+        hbox_swc_url_label = QHBoxLayout()
+        hbox_swc_url_label.addWidget(swc_url_label)
+
+        swc_url_input = QLineEdit()
+        swc_url_input.setPlaceholderText("paste URL (optional)")
+        swc_url_input.textChanged.connect(self.on_swc_url_changed)
+        show_swc_button = QPushButton("Show SWC")
+        show_swc_button.clicked.connect(lambda: self.add_checkboxes(vbox_swc, swc_url_input.text()))
+
+        hbox_show_swc_btn = QHBoxLayout()
+        hbox_show_swc_btn.addWidget(show_swc_button)
+
+        hbox_swc_url_input = QHBoxLayout()
+        hbox_swc_url_input.addWidget(swc_url_input)
+
+        hbox_swc_label = QHBoxLayout()
+        hbox_swc_label.addWidget(visualize_label)
+
+        vbox_swc = QVBoxLayout()
+        # vbox_swc.addLayout(hbox_swc_label)
+        vbox_swc.addLayout(hbox_swc_url_label)
+        vbox_swc.addLayout(hbox_swc_url_input)
+        vbox_swc.addLayout(hbox_show_swc_btn)
+
+        hbox_swc = QHBoxLayout()
+        hbox_swc.addLayout(vbox_swc)
+
+        scroll = QScrollArea()
+        swc_groupbox = QGroupBox('pre-loaded SWC')
+        swc_form = QFormLayout()
+        swc_groupbox.setLayout(swc_form)
+        scroll.setWidget(swc_groupbox)
+        scroll.setWidgetResizable(True)
+        # scroll.setFixedHeight(300)
+        vscroll = QVBoxLayout()
+        vscroll.addWidget(scroll)
+        hscroll = QHBoxLayout()
+        hscroll.addLayout(vscroll)
+        vbox_scrollarea = QVBoxLayout()
+        vbox_scrollarea.addLayout(hbox_swc_label)
+        vbox_scrollarea.addLayout(hscroll)
+        hbox_scrollarea = QHBoxLayout()
+        hbox_scrollarea.addLayout(vbox_scrollarea)
+
+        # ----------------------- Create layout -----------------------
         vbox_main = QVBoxLayout()
         hbox_dataset = QHBoxLayout()
         hbox_fullresolution = QHBoxLayout()
-        hbox_swc = QHBoxLayout()
         hbox_dataset_label = QHBoxLayout()
         hbox_dataset_label.addWidget(dataset_label)
         hbox_dataset_dropdown = QHBoxLayout()
         hbox_dataset_dropdown.addWidget(dataset_dropdown)
+        hbox_dataset_url_label = QHBoxLayout()
+        hbox_dataset_url_label.addWidget(dataset_url_label)
+        hbox_dataset_url = QHBoxLayout()
+        hbox_dataset_url.addWidget(dataset_url_input)
         hbox_dataset_load_btn = QHBoxLayout()
         hbox_dataset_load_btn.addWidget(self.load_button)
         hbox_fullresolution_label = QHBoxLayout()
@@ -146,15 +197,13 @@ class LoadBilData(QWidget):
         hbox_fullresolution_url_input.addWidget(url_input_fullresolution)
         hbox_fullresolution_show_button = QHBoxLayout()
         hbox_fullresolution_show_button.addWidget(self.button_fullresolution)
-        hbox_swc_label = QHBoxLayout()
-        hbox_swc_label.addWidget(visualize_label)
-        hbox_url_input = QHBoxLayout()
-        hbox_url_input.addWidget(url_input)
-        hbox_show_swc_btn = QHBoxLayout()
-        hbox_show_swc_btn.addWidget(show_swc_button)
+
         vbox_dataset = QVBoxLayout()
         vbox_dataset.addLayout(hbox_dataset_label)
         vbox_dataset.addLayout(hbox_dataset_dropdown)
+        vbox_dataset.addItem(QSpacerItem(1, 10))
+        vbox_dataset.addLayout(hbox_dataset_url_label)
+        vbox_dataset.addLayout(hbox_dataset_url)
         vbox_dataset.addLayout(hbox_dataset_load_btn)
         vbox_dataset.addItem(QSpacerItem(1, 50))
         vbox_fullresolution = QVBoxLayout()
@@ -162,10 +211,7 @@ class LoadBilData(QWidget):
         vbox_fullresolution.addLayout(hbox_fullresolution_url_input)
         vbox_fullresolution.addLayout(hbox_fullresolution_show_button)
         vbox_fullresolution.addItem(QSpacerItem(1, 50))
-        vbox_swc = QVBoxLayout()
-        vbox_swc.addLayout(hbox_swc_label)
-        vbox_swc.addLayout(hbox_url_input)
-        vbox_swc.addLayout(hbox_show_swc_btn)
+
         hbox_dataset.addLayout(vbox_dataset)
         hbox_fullresolution.addLayout(vbox_fullresolution)
 
@@ -187,26 +233,14 @@ class LoadBilData(QWidget):
         hbox_spinner.addWidget(self.spinner_label)
         self.spinner_label.setHidden(True)
 
-        hbox_swc.addLayout(vbox_swc)
         vbox_main.addLayout(hbox_logo)
         vbox_main.addItem(QSpacerItem(1, 25))
         vbox_main.addLayout(hbox_spinner)
         vbox_main.addLayout(hbox_dataset)
         vbox_main.addLayout(hbox_fullresolution)
+        vbox_main.addLayout(hbox_scrollarea)
+        vbox_main.addItem(QSpacerItem(1, 10))
         vbox_main.addLayout(hbox_swc)
-
-        scroll = QScrollArea()
-        swc_groupbox = QGroupBox('pre-loaded SWC')
-        swc_form = QFormLayout()
-        swc_groupbox.setLayout(swc_form)
-        scroll.setWidget(swc_groupbox)
-        scroll.setWidgetResizable(True)
-        # scroll.setFixedHeight(300)
-        vscroll = QVBoxLayout()
-        vscroll.addWidget(scroll)
-        hscroll = QHBoxLayout()
-        hscroll.addLayout(vscroll)
-        vbox_main.addLayout(hscroll)
         vbox_main.addItem(QSpacerItem(1, 50))
         vbox_main.addLayout(hbox_scale_controls)
 
@@ -218,7 +252,6 @@ class LoadBilData(QWidget):
         # connect signals and slots
         self.load_button.clicked.connect(self.load_dataset)
         # show_swc_button.clicked.connect(self.load_swc)
-        show_swc_button.clicked.connect(lambda: self.add_checkboxes(vbox_swc, url_input.text()))
         self.button_fullresolution.clicked.connect(self.load_full_resolution)
 
     def load_dataset(self):
@@ -232,7 +265,19 @@ class LoadBilData(QWidget):
 
         @thread_worker(connect={"returned": _show_img})
         def _load_img():
-            return load_bil_data(self.dataset)
+            if self.dataset_url != "":
+                dataset_info = {
+                    'contrast_limits': [0, 65535],
+                    'scale': (1, 1, 1),
+                    'url': [
+                        self.dataset_url
+                    ]
+                }
+                dataset_name = ''.join(random.choices(string.ascii_uppercase + string.ascii_lowercase + string.digits, k=10))
+            else:
+                dataset_info = get_datasets()[self.dataset]
+                dataset_name = self.dataset
+            return load_bil_data(dataset_info, dataset_name)
 
         self.load_button.setEnabled(False)
         self.spinner_label.setHidden(False)
@@ -408,6 +453,9 @@ class LoadBilData(QWidget):
         for checkbox in self.swc_checkboxes:
             checkbox.setChecked(False)
 
+    def on_dataset_url_changed(self, value):
+        self.dataset_url = value
+
 
 def get_swc_files(dataset_name):
     from .fMOST_swc import swc_datasets
@@ -434,10 +482,7 @@ def getFilesHttp(url: str, ext: str) -> list:
     return files
 
 
-def load_bil_data(
-    # viewer: napari.Viewer,
-    dataset: str
-) -> 'napari.types.LayerDataTuple':
+def load_bil_data(dataset_info, name):
     
     ''' 
     This panel provides a tool for load pre-determined datasets from BIL
@@ -446,11 +491,9 @@ def load_bil_data(
     Current datasets are fMOST modality which included multi-resolution single-color
     projections.
     '''
-    
-    dataset_info = get_datasets()[dataset]
-    
+
     bilData = dataset_info['url']
-    ext = 'tif'
+    supported_file_types = ['tif', 'tiff', 'jp2']
 
     def getImage(fileObj):
         with fileObj as f:
@@ -460,9 +503,11 @@ def load_bil_data(
     
     data = []
     for ii in bilData:
-        images = sorted(getFilesHttp(ii, ext))
-        images = [fsspec.open(x,'rb') for x in images]
-        data.append(images)
+        for ext in supported_file_types:
+            images = sorted(getFilesHttp(ii, ext))
+            if len(images):
+                images = [fsspec.open(x,'rb') for x in images]
+                data.append(images)
     
     
 
@@ -472,10 +517,7 @@ def load_bil_data(
         images = [da.from_delayed(x, sampleImage.shape,dtype=sampleImage.dtype) for x in images]
         images = da.stack(images)
         data[idx] = images
-    
-    
-    
-    name = dataset
+
     scale = dataset_info['scale']
     multiscale = True if len(dataset_info['url']) > 1 else False
     contrast_limits = dataset_info['contrast_limits']
