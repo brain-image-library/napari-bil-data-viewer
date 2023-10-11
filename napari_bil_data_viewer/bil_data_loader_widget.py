@@ -60,10 +60,6 @@ class LoadBilData(QWidget):
         dataset_dropdown = QComboBox()
         dataset_dropdown.addItems(self.datasets)
         dataset_dropdown.currentTextChanged.connect(self.on_combobox_changed)
-        dataset_url_input = QLineEdit()
-        dataset_url_input.setPlaceholderText("paste URL (optional)")
-        dataset_url_input.textChanged.connect(self.on_dataset_url_changed)
-        dataset_url_label = QLabel("<strong>OR</strong><br/>paste URL:")
 
         # ----------------------- SWC controls -----------------------
         visualize_label = QLabel("Visualize SWC:")
@@ -119,10 +115,6 @@ class LoadBilData(QWidget):
         hbox_dataset_label.addWidget(dataset_label)
         hbox_dataset_dropdown = QHBoxLayout()
         hbox_dataset_dropdown.addWidget(dataset_dropdown)
-        hbox_dataset_url_label = QHBoxLayout()
-        hbox_dataset_url_label.addWidget(dataset_url_label)
-        hbox_dataset_url = QHBoxLayout()
-        hbox_dataset_url.addWidget(dataset_url_input)
         hbox_dataset_load_btn = QHBoxLayout()
         hbox_dataset_load_btn.addWidget(self.load_button)
 
@@ -130,8 +122,6 @@ class LoadBilData(QWidget):
         vbox_dataset.addLayout(hbox_dataset_label)
         vbox_dataset.addLayout(hbox_dataset_dropdown)
         vbox_dataset.addItem(QSpacerItem(1, 10))
-        vbox_dataset.addLayout(hbox_dataset_url_label)
-        vbox_dataset.addLayout(hbox_dataset_url)
         vbox_dataset.addLayout(hbox_dataset_load_btn)
         vbox_dataset.addItem(QSpacerItem(1, 50))
 
@@ -184,18 +174,8 @@ class LoadBilData(QWidget):
 
         @thread_worker(connect={"returned": _show_img})
         def _load_img():
-            if self.dataset_url != "":
-                dataset_info = {
-                    'contrast_limits': [0, 65535],
-                    'scale': (1, 1, 1),
-                    'url': [
-                        self.dataset_url
-                    ]
-                }
-                dataset_name = ''.join(random.choices(string.ascii_uppercase + string.ascii_lowercase + string.digits, k=10))
-            else:
-                dataset_info = get_datasets()[self.dataset]
-                dataset_name = self.dataset
+            dataset_info = get_datasets()[self.dataset]
+            dataset_name = self.dataset
             return load_bil_data(dataset_info, dataset_name)
 
         self.load_button.setEnabled(False)
@@ -311,9 +291,6 @@ class LoadBilData(QWidget):
     def uncheck_swc_checkboxes(self):
         for checkbox in self.swc_checkboxes:
             checkbox.setChecked(False)
-
-    def on_dataset_url_changed(self, value):
-        self.dataset_url = value
 
 
 class LayerScaleControls(QWidget):
@@ -500,6 +477,70 @@ class LoadMultiscaleData(QWidget):
         _load_img()
 
 
+class LoadImageStackFromURL(QWidget):
+    def __init__(self, napari_viewer):
+        super().__init__()
+        self.viewer = napari_viewer
+        self.init_ui()
+
+    def init_ui(self):
+        dataset_url_input = QLineEdit()
+        dataset_url_input.setPlaceholderText("paste URL")
+        dataset_url_input.textChanged.connect(self.on_dataset_url_changed)
+        dataset_url_label = QLabel("Load Image Stack (tif, tiff, jp2):")
+        self.load_button = QPushButton("Load Dataset")
+        self.load_button.clicked.connect(self.load_dataset)
+
+        # Loading indicator (spinner)
+        hbox_spinner = QHBoxLayout()
+        spinner_movie = abspath(__file__, "resources/loading.gif")
+        spinner = QMovie(spinner_movie)
+        spinner.setScaledSize(QSize(50, 50))
+        self.spinner_label = QLabel()
+        self.spinner_label.setMinimumSize(QSize(50, 50))
+        self.spinner_label.setMaximumSize(QSize(50, 50))
+        self.spinner_label.setMovie(spinner)
+        hbox_spinner.addWidget(self.spinner_label)
+        self.spinner_label.setHidden(True)
+
+        vbox_main = QVBoxLayout()
+        vbox_main.addWidget(dataset_url_label)
+        vbox_main.addLayout(hbox_spinner)
+        vbox_main.addWidget(dataset_url_input)
+        vbox_main.addWidget(self.load_button)
+
+        self.setLayout(vbox_main)
+
+    def on_dataset_url_changed(self, value):
+        self.dataset_url = value
+
+    def load_dataset(self):
+
+        def _show_img(args):
+            data, meta, layer_type = args
+            self.viewer.add_image(data, **meta)
+            self.spinner_label.movie().stop()
+            self.spinner_label.setHidden(True)
+            self.load_button.setEnabled(True)
+
+        @thread_worker(connect={"returned": _show_img})
+        def _load_img():
+            dataset_info = {
+                'contrast_limits': [0, 65535],
+                'scale': (1, 1, 1),
+                'url': [
+                    self.dataset_url
+                ]
+            }
+            dataset_name = ''.join(random.choices(string.ascii_uppercase + string.ascii_lowercase + string.digits, k=10))
+            return load_bil_data(dataset_info, dataset_name)
+
+        self.load_button.setEnabled(False)
+        self.spinner_label.setHidden(False)
+        self.spinner_label.movie().start()
+        _load_img()
+
+
 def get_swc_files(dataset_name):
     from .fMOST_swc import swc_datasets
     swc_files = swc_datasets.get(dataset_name, [])
@@ -652,4 +693,4 @@ def abspath(root, relpath):
 
 @napari_hook_implementation
 def napari_experimental_provide_dock_widget():
-    return [LoadBilData, LoadMultiscaleData, LayerScaleControls]
+    return [LoadBilData, LoadImageStackFromURL, LoadMultiscaleData, LayerScaleControls]
