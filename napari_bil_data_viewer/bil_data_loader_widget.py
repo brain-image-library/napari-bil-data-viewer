@@ -50,13 +50,8 @@ class LoadBilData(QWidget):
         self.neuron_sections = []
         self.load_button = QPushButton("Load Dataset")
         self.spinner_label = QLabel()
-        self.layer_to_adjust_scale = ""
-        self.adjusted_scale_z = 1
-        self.adjusted_scale_y = 1
-        self.adjusted_scale_x = 1
         self.swc_checkboxes = []
         self.init_ui()
-        napari_viewer.layers.selection.events.changed.connect(self._on_selection)
         napari_viewer.layers.events.removed.connect(self._on_layer_deletion)
         napari_viewer.layers.events.removing.connect(self._pre_layer_deletion)
 
@@ -76,59 +71,6 @@ class LoadBilData(QWidget):
         url_input_fullresolution.setPlaceholderText("paste URL")
         url_input_fullresolution.textChanged.connect(self.on_fullresolution_url_changed)
         self.button_fullresolution = QPushButton("Load Full Resolution")
-
-        # ----------------------- Scale Controls -----------------------
-        hbox_scale_label = QHBoxLayout()
-        scale_label = QLabel("Adjust Scale:")
-        hbox_scale_label.addWidget(scale_label)
-
-        hbox_scale = QHBoxLayout()
-        z_scale_input_label = QLabel("z :")
-        z_scale_input_label.setFixedWidth(20)
-        self.z_scale_input = QLineEdit()
-        self.z_scale_input.setPlaceholderText("1.0")
-        self.z_scale_input.setFixedWidth(100)
-        self.z_scale_input.textChanged.connect(self.on_scale_z_input_changed)
-        y_scale_input_label = QLabel("y :")
-        y_scale_input_label.setFixedWidth(20)
-        self.y_scale_input = QLineEdit()
-        self.y_scale_input.setPlaceholderText("1.0")
-        self.y_scale_input.setFixedWidth(100)
-        self.y_scale_input.textChanged.connect(self.on_scale_y_input_changed)
-        x_scale_input_label = QLabel("x :")
-        x_scale_input_label.setFixedWidth(20)
-        self.x_scale_input = QLineEdit()
-        self.x_scale_input.setPlaceholderText("1.0")
-        self.x_scale_input.setFixedWidth(100)
-        self.x_scale_input.textChanged.connect(self.on_scale_x_input_changed)
-        hbox_scale.addWidget(z_scale_input_label)
-        hbox_scale.addWidget(self.z_scale_input)
-        hbox_scale.addWidget(y_scale_input_label)
-        hbox_scale.addWidget(self.y_scale_input)
-        hbox_scale.addWidget(x_scale_input_label)
-        hbox_scale.addWidget(self.x_scale_input)
-
-        hbox_scale_dropdown = QHBoxLayout()
-        scale_dropdown_label = QLabel("layer")
-        scale_dropdown_label.setFixedWidth(50)
-        self.scale_dropdown = QComboBox()
-        self.scale_dropdown.currentTextChanged.connect(self.on_scale_dropdown_changed)
-        hbox_scale_dropdown.addWidget(scale_dropdown_label)
-        hbox_scale_dropdown.addWidget(self.scale_dropdown)
-
-        hbox_adjust_scale_btn = QHBoxLayout()
-        adjust_scale_btn = QPushButton("Adjust")
-        adjust_scale_btn.clicked.connect(self.adjust_scale)
-        hbox_adjust_scale_btn.addWidget(adjust_scale_btn)
-
-        vbox_scale = QVBoxLayout()
-        vbox_scale.addLayout(hbox_scale_label)
-        vbox_scale.addLayout(hbox_scale_dropdown)
-        vbox_scale.addLayout(hbox_scale)
-        vbox_scale.addLayout(hbox_adjust_scale_btn)
-
-        hbox_scale_controls = QHBoxLayout()
-        hbox_scale_controls.addLayout(vbox_scale)
 
         # ----------------------- SWC controls -----------------------
         visualize_label = QLabel("Visualize SWC:")
@@ -242,7 +184,6 @@ class LoadBilData(QWidget):
         vbox_main.addItem(QSpacerItem(1, 10))
         vbox_main.addLayout(hbox_swc)
         vbox_main.addItem(QSpacerItem(1, 50))
-        vbox_main.addLayout(hbox_scale_controls)
 
         # dynamically add checkboxes for SWC files
         dataset_dropdown.currentIndexChanged.connect(lambda: self.create_swc_checkboxes(dataset_dropdown.currentText(), swc_form))
@@ -405,6 +346,93 @@ class LoadBilData(QWidget):
         self.spinner_label.movie().start()
         _load_img()
 
+    def _on_layer_deletion(self, e):
+        layer_name = e.value.name
+        if layer_name == 'soma' or layer_name == 'neuron tracings':
+            self.uncheck_swc_checkboxes()
+
+    def _pre_layer_deletion(self, e):
+        pass
+
+    def uncheck_swc_checkboxes(self):
+        for checkbox in self.swc_checkboxes:
+            checkbox.setChecked(False)
+
+    def on_dataset_url_changed(self, value):
+        self.dataset_url = value
+
+
+class LayerScaleControls(QWidget):
+    def __init__(self, napari_viewer):
+        super().__init__()
+        self.viewer = napari_viewer
+        self.layer_to_adjust_scale = ""
+        self.adjusted_scale_z = 1
+        self.adjusted_scale_y = 1
+        self.adjusted_scale_x = 1
+        self.init_ui()
+        napari_viewer.layers.selection.events.changed.connect(self._on_selection)
+        napari_viewer.layers.events.removed.connect(self._on_layer_deletion)
+
+    def init_ui(self):
+        # ----------------------- Scale Controls -----------------------
+        hbox_scale_label = QHBoxLayout()
+        scale_label = QLabel("Adjust Scale:")
+        hbox_scale_label.addWidget(scale_label)
+
+        hbox_scale = QHBoxLayout()
+        z_scale_input_label = QLabel("z :")
+        z_scale_input_label.setFixedWidth(20)
+        self.z_scale_input = QLineEdit()
+        self.z_scale_input.setPlaceholderText("1.0")
+        self.z_scale_input.setFixedWidth(100)
+        self.z_scale_input.textChanged.connect(self.on_scale_z_input_changed)
+        y_scale_input_label = QLabel("y :")
+        y_scale_input_label.setFixedWidth(20)
+        self.y_scale_input = QLineEdit()
+        self.y_scale_input.setPlaceholderText("1.0")
+        self.y_scale_input.setFixedWidth(100)
+        self.y_scale_input.textChanged.connect(self.on_scale_y_input_changed)
+        x_scale_input_label = QLabel("x :")
+        x_scale_input_label.setFixedWidth(20)
+        self.x_scale_input = QLineEdit()
+        self.x_scale_input.setPlaceholderText("1.0")
+        self.x_scale_input.setFixedWidth(100)
+        self.x_scale_input.textChanged.connect(self.on_scale_x_input_changed)
+        hbox_scale.addWidget(z_scale_input_label)
+        hbox_scale.addWidget(self.z_scale_input)
+        hbox_scale.addWidget(y_scale_input_label)
+        hbox_scale.addWidget(self.y_scale_input)
+        hbox_scale.addWidget(x_scale_input_label)
+        hbox_scale.addWidget(self.x_scale_input)
+
+        hbox_scale_dropdown = QHBoxLayout()
+        scale_dropdown_label = QLabel("layer:")
+        scale_dropdown_label.setFixedWidth(50)
+        self.scale_dropdown = QComboBox()
+        self.scale_dropdown.currentTextChanged.connect(self.on_scale_dropdown_changed)
+        hbox_scale_dropdown.addWidget(scale_dropdown_label)
+        hbox_scale_dropdown.addWidget(self.scale_dropdown)
+
+        hbox_adjust_scale_btn = QHBoxLayout()
+        adjust_scale_btn = QPushButton("Adjust")
+        adjust_scale_btn.clicked.connect(self.adjust_scale)
+        hbox_adjust_scale_btn.addWidget(adjust_scale_btn)
+
+        vbox_scale = QVBoxLayout()
+        vbox_scale.addLayout(hbox_scale_label)
+        vbox_scale.addLayout(hbox_scale_dropdown)
+        vbox_scale.addLayout(hbox_scale)
+        vbox_scale.addLayout(hbox_adjust_scale_btn)
+
+        hbox_scale_controls = QHBoxLayout()
+        hbox_scale_controls.addLayout(vbox_scale)
+
+        vbox_main = QVBoxLayout()
+        vbox_main.addLayout(hbox_scale_controls)
+
+        self.setLayout(vbox_main)
+
     def on_scale_dropdown_changed(self, value):
         if value != "":
             self.layer_to_adjust_scale = value
@@ -429,6 +457,12 @@ class LoadBilData(QWidget):
         self.scale_dropdown.clear()
         self.scale_dropdown.addItems([x.name for x in self.viewer.layers])
 
+    def _on_layer_deletion(self):
+        self.scale_dropdown.clear()
+        self.z_scale_input.clear()
+        self.y_scale_input.clear()
+        self.x_scale_input.clear()
+
     def adjust_scale(self):
         print("Changing scale of", self.layer_to_adjust_scale, "to", self.adjusted_scale_z, self.adjusted_scale_y, self.adjusted_scale_x)
         self.viewer.layers[self.layer_to_adjust_scale].scale = [
@@ -436,25 +470,6 @@ class LoadBilData(QWidget):
             self.adjusted_scale_y,
             self.adjusted_scale_x
         ]
-
-    def _on_layer_deletion(self, e):
-        self.scale_dropdown.clear()
-        self.z_scale_input.clear()
-        self.y_scale_input.clear()
-        self.x_scale_input.clear()
-        layer_name = e.value.name
-        if layer_name == 'soma' or layer_name == 'neuron tracings':
-            self.uncheck_swc_checkboxes()
-
-    def _pre_layer_deletion(self, e):
-        pass
-
-    def uncheck_swc_checkboxes(self):
-        for checkbox in self.swc_checkboxes:
-            checkbox.setChecked(False)
-
-    def on_dataset_url_changed(self, value):
-        self.dataset_url = value
 
 
 def get_swc_files(dataset_name):
@@ -609,4 +624,4 @@ def abspath(root, relpath):
 
 @napari_hook_implementation
 def napari_experimental_provide_dock_widget():
-    return LoadBilData
+    return [LoadBilData, LayerScaleControls]
