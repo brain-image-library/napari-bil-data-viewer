@@ -316,6 +316,7 @@ class LayerScaleControls(QWidget):
         scale_dropdown_label.setFixedWidth(50)
         self.scale_dropdown = QComboBox()
         self.scale_dropdown.currentTextChanged.connect(self.on_scale_dropdown_changed)
+        self.scale_dropdown.addItems([x.name for x in self.viewer.layers])
         hbox_scale_dropdown.addWidget(scale_dropdown_label)
         hbox_scale_dropdown.addWidget(self.scale_dropdown)
 
