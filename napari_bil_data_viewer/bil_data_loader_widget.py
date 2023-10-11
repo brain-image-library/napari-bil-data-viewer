@@ -73,7 +73,7 @@ class LoadCuratedDatasets(QWidget):
         swc_groupbox.setLayout(swc_form)
         scroll.setWidget(swc_groupbox)
         scroll.setWidgetResizable(True)
-        # scroll.setFixedHeight(300)
+        scroll.setMinimumHeight(200)
         vscroll = QVBoxLayout()
         vscroll.addWidget(scroll)
         hscroll = QHBoxLayout()
@@ -98,17 +98,9 @@ class LoadCuratedDatasets(QWidget):
         vbox_dataset.addLayout(hbox_dataset_dropdown)
         vbox_dataset.addItem(QSpacerItem(1, 10))
         vbox_dataset.addLayout(hbox_dataset_load_btn)
-        vbox_dataset.addItem(QSpacerItem(1, 50))
+        vbox_dataset.addItem(QSpacerItem(1, 25))
 
         hbox_dataset.addLayout(vbox_dataset)
-
-        hbox_logo = QHBoxLayout()
-        logo = abspath(__file__, "resources/bil_logo.png")
-        bil_logo_label = QLabel(f'<img src="{logo}" width="100" height="75">')
-        bil_info_label = QLabel('<h2>Brain Image Library</h2> <a href="https://brainimagelibrary.org" style="color:gray;">brainimagelibrary.org</a>')
-        bil_info_label.setOpenExternalLinks(True)
-        hbox_logo.addWidget(bil_logo_label)
-        hbox_logo.addWidget(bil_info_label)
 
         hbox_spinner = QHBoxLayout()
         spinner_movie = abspath(__file__, "resources/loading.gif")
@@ -120,14 +112,13 @@ class LoadCuratedDatasets(QWidget):
         hbox_spinner.addWidget(self.spinner_label)
         self.spinner_label.setHidden(True)
 
-        vbox_main.addLayout(hbox_logo)
+        vbox_main.addLayout(BILInfoHbox())
         vbox_main.addItem(QSpacerItem(1, 25))
         vbox_main.addLayout(hbox_spinner)
         vbox_main.addLayout(hbox_dataset)
         vbox_main.addLayout(hbox_scrollarea)
         vbox_main.addItem(QSpacerItem(1, 10))
         vbox_main.addLayout(hbox_swc)
-        vbox_main.addItem(QSpacerItem(1, 50))
 
         # dynamically add checkboxes for SWC files
         dataset_dropdown.currentIndexChanged.connect(lambda: self.create_swc_checkboxes(dataset_dropdown.currentText(), swc_form))
@@ -184,7 +175,6 @@ class LoadCuratedDatasets(QWidget):
         else:
             self.soma_layer = self.viewer.add_points(soma, **soma_meta)
         self.visualized_tracings.append(url)
-
 
     def create_swc_checkboxes(self, dataset_name, vbox):
         # remove existing checkboxes
@@ -404,7 +394,6 @@ class LoadMultiscaleDataFromURL(QWidget):
         vbox_fullresolution.addLayout(hbox_fullresolution_label)
         vbox_fullresolution.addLayout(hbox_fullresolution_url_input)
         vbox_fullresolution.addLayout(hbox_fullresolution_show_button)
-        vbox_fullresolution.addItem(QSpacerItem(1, 50))
 
         hbox_fullresolution = QHBoxLayout()
         hbox_fullresolution.addLayout(vbox_fullresolution)
@@ -422,6 +411,7 @@ class LoadMultiscaleDataFromURL(QWidget):
         self.spinner_label.setHidden(True)
 
         vbox_main = QVBoxLayout()
+        vbox_main.addLayout(BILInfoHbox())
         vbox_main.addLayout(hbox_spinner)
         vbox_main.addLayout(hbox_fullresolution)
 
@@ -462,7 +452,7 @@ class LoadImageStackFromURL(QWidget):
         dataset_url_input = QLineEdit()
         dataset_url_input.setPlaceholderText("paste URL")
         dataset_url_input.textChanged.connect(self.on_dataset_url_changed)
-        dataset_url_label = QLabel("Load Image Stack (tif, tiff, jp2):")
+        dataset_url_label = QLabel("Load image stack (tif, tiff, jp2):")
         self.load_button = QPushButton("Load Dataset")
         self.load_button.clicked.connect(self.load_dataset)
 
@@ -479,6 +469,7 @@ class LoadImageStackFromURL(QWidget):
         self.spinner_label.setHidden(True)
 
         vbox_main = QVBoxLayout()
+        vbox_main.addLayout(BILInfoHbox())
         vbox_main.addWidget(dataset_url_label)
         vbox_main.addLayout(hbox_spinner)
         vbox_main.addWidget(dataset_url_input)
@@ -553,6 +544,7 @@ class LoadNeuronMorphologyFromURL(QWidget):
         hbox_swc.addLayout(vbox_swc)
 
         vbox_main = QVBoxLayout()
+        vbox_main.addLayout(BILInfoHbox())
         vbox_main.addLayout(hbox_swc)
 
         self.setLayout(vbox_main)
@@ -706,6 +698,17 @@ def load_bil_data(dataset_info, name):
         }
 
     return (data,meta,'image')
+
+
+class BILInfoHbox(QHBoxLayout):
+    def __init__(self):
+        super().__init__()
+        logo = abspath(__file__, "resources/bil_logo.png")
+        bil_logo_label = QLabel(f'<img src="{logo}" width="100" height="75">')
+        bil_info_label = QLabel('<h2>Brain Image Library</h2> <a href="https://brainimagelibrary.org" style="color:gray;">brainimagelibrary.org</a>')
+        bil_info_label.setOpenExternalLinks(True)
+        self.addWidget(bil_logo_label)
+        self.addWidget(bil_info_label)
 
 
 def load_bil_swc(url, dataset):
