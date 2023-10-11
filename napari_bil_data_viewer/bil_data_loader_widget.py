@@ -35,14 +35,14 @@ from napari.utils.colormaps import label_colormap
 color_map = label_colormap(num_colors=500, seed=0.5)
 
 
-class LoadBilData(QWidget):
+class LoadCuratedDatasets(QWidget):
     def __init__(self, napari_viewer):
         super().__init__()
         self.viewer = napari_viewer
         self.soma_layer = None
         self.tracings_layer = None
         self.datasets = sorted([key for key in get_datasets()])
-        self.dataset = self.datasets[0] if len(self.datasets) else None
+        self.dataset = "mouseID_19032508-191171" if len(self.datasets) else None
         self.swc_url = ""
         self.dataset_url = ""
         self.visualized_tracings = []
@@ -131,6 +131,7 @@ class LoadBilData(QWidget):
 
         # dynamically add checkboxes for SWC files
         dataset_dropdown.currentIndexChanged.connect(lambda: self.create_swc_checkboxes(dataset_dropdown.currentText(), swc_form))
+        dataset_dropdown.setCurrentIndex(self.datasets.index(self.dataset))
 
         self.setLayout(vbox_main)
 
@@ -376,7 +377,7 @@ class LayerScaleControls(QWidget):
         ]
 
 
-class LoadMultiscaleData(QWidget):
+class LoadMultiscaleDataFromURL(QWidget):
     def __init__(self, napari_viewer):
         super().__init__()
         self.viewer = napari_viewer
@@ -777,4 +778,4 @@ def abspath(root, relpath):
 
 @napari_hook_implementation
 def napari_experimental_provide_dock_widget():
-    return [LoadBilData, LoadImageStackFromURL, LoadMultiscaleData, LoadNeuronMorphologyFromURL, LayerScaleControls]
+    return [LoadCuratedDatasets, LoadImageStackFromURL, LoadMultiscaleDataFromURL, LoadNeuronMorphologyFromURL, LayerScaleControls]
