@@ -44,7 +44,6 @@ class LoadBilData(QWidget):
         self.datasets = sorted([key for key in get_datasets()])
         self.dataset = self.datasets[0] if len(self.datasets) else None
         self.swc_url = ""
-        self.fullresolution_url = ""
         self.dataset_url = ""
         self.visualized_tracings = []
         self.neuron_sections = []
@@ -65,12 +64,6 @@ class LoadBilData(QWidget):
         dataset_url_input.setPlaceholderText("paste URL (optional)")
         dataset_url_input.textChanged.connect(self.on_dataset_url_changed)
         dataset_url_label = QLabel("<strong>OR</strong><br/>paste URL:")
-        # ------------------------
-        fullresolution_label = QLabel("Visualize Full Resolution:")
-        url_input_fullresolution = QLineEdit()
-        url_input_fullresolution.setPlaceholderText("paste URL")
-        url_input_fullresolution.textChanged.connect(self.on_fullresolution_url_changed)
-        self.button_fullresolution = QPushButton("Load Full Resolution")
 
         # ----------------------- SWC controls -----------------------
         visualize_label = QLabel("Visualize SWC:")
@@ -122,7 +115,6 @@ class LoadBilData(QWidget):
         # ----------------------- Create layout -----------------------
         vbox_main = QVBoxLayout()
         hbox_dataset = QHBoxLayout()
-        hbox_fullresolution = QHBoxLayout()
         hbox_dataset_label = QHBoxLayout()
         hbox_dataset_label.addWidget(dataset_label)
         hbox_dataset_dropdown = QHBoxLayout()
@@ -133,12 +125,6 @@ class LoadBilData(QWidget):
         hbox_dataset_url.addWidget(dataset_url_input)
         hbox_dataset_load_btn = QHBoxLayout()
         hbox_dataset_load_btn.addWidget(self.load_button)
-        hbox_fullresolution_label = QHBoxLayout()
-        hbox_fullresolution_label.addWidget(fullresolution_label)
-        hbox_fullresolution_url_input = QHBoxLayout()
-        hbox_fullresolution_url_input.addWidget(url_input_fullresolution)
-        hbox_fullresolution_show_button = QHBoxLayout()
-        hbox_fullresolution_show_button.addWidget(self.button_fullresolution)
 
         vbox_dataset = QVBoxLayout()
         vbox_dataset.addLayout(hbox_dataset_label)
@@ -148,14 +134,8 @@ class LoadBilData(QWidget):
         vbox_dataset.addLayout(hbox_dataset_url)
         vbox_dataset.addLayout(hbox_dataset_load_btn)
         vbox_dataset.addItem(QSpacerItem(1, 50))
-        vbox_fullresolution = QVBoxLayout()
-        vbox_fullresolution.addLayout(hbox_fullresolution_label)
-        vbox_fullresolution.addLayout(hbox_fullresolution_url_input)
-        vbox_fullresolution.addLayout(hbox_fullresolution_show_button)
-        vbox_fullresolution.addItem(QSpacerItem(1, 50))
 
         hbox_dataset.addLayout(vbox_dataset)
-        hbox_fullresolution.addLayout(vbox_fullresolution)
 
         hbox_logo = QHBoxLayout()
         logo = abspath(__file__, "resources/bil_logo.png")
@@ -179,7 +159,6 @@ class LoadBilData(QWidget):
         vbox_main.addItem(QSpacerItem(1, 25))
         vbox_main.addLayout(hbox_spinner)
         vbox_main.addLayout(hbox_dataset)
-        vbox_main.addLayout(hbox_fullresolution)
         vbox_main.addLayout(hbox_scrollarea)
         vbox_main.addItem(QSpacerItem(1, 10))
         vbox_main.addLayout(hbox_swc)
@@ -193,7 +172,6 @@ class LoadBilData(QWidget):
         # connect signals and slots
         self.load_button.clicked.connect(self.load_dataset)
         # show_swc_button.clicked.connect(self.load_swc)
-        self.button_fullresolution.clicked.connect(self.load_full_resolution)
 
     def load_dataset(self):
 
@@ -322,30 +300,6 @@ class LoadBilData(QWidget):
         self.visualized_tracings.pop(url_index)
         self.neuron_sections.pop(url_index)
 
-    def on_fullresolution_url_changed(self, value):
-        self.fullresolution_url = value
-
-    def load_full_resolution(self):
-        def _show_img(layers):
-            for layer in layers:
-                data, meta, layer_type = layer
-                self.viewer.add_image(data, **meta)  # list of layers
-            self.spinner_label.movie().stop()
-            self.spinner_label.setHidden(True)
-            self.button_fullresolution.setEnabled(True)
-
-        @thread_worker(connect={"returned": _show_img})
-        def _load_img():
-            layer_data, hookimpl = read_data_with_plugins(
-                [self.fullresolution_url], plugin="napari-ome-zarr", stack=False
-            )
-            return layer_data
-
-        self.button_fullresolution.setEnabled(False)
-        self.spinner_label.setHidden(False)
-        self.spinner_label.movie().start()
-        _load_img()
-
     def _on_layer_deletion(self, e):
         layer_name = e.value.name
         if layer_name == 'soma' or layer_name == 'neuron tracings':
@@ -470,6 +424,80 @@ class LayerScaleControls(QWidget):
             self.adjusted_scale_y,
             self.adjusted_scale_x
         ]
+
+
+class LoadMultiscaleData(QWidget):
+    def __init__(self, napari_viewer):
+        super().__init__()
+        self.viewer = napari_viewer
+        self.fullresolution_url = ""
+        self.init_ui()
+
+    def init_ui(self):
+        fullresolution_label = QLabel("Visualize multi-scale data (.ome.zarr):")
+        url_input_fullresolution = QLineEdit()
+        url_input_fullresolution.setPlaceholderText("paste URL")
+        url_input_fullresolution.textChanged.connect(self.on_fullresolution_url_changed)
+        self.button_fullresolution = QPushButton("Load Dataset")
+        self.button_fullresolution.clicked.connect(self.load_full_resolution)
+
+        hbox_fullresolution_label = QHBoxLayout()
+        hbox_fullresolution_label.addWidget(fullresolution_label)
+        hbox_fullresolution_url_input = QHBoxLayout()
+        hbox_fullresolution_url_input.addWidget(url_input_fullresolution)
+        hbox_fullresolution_show_button = QHBoxLayout()
+        hbox_fullresolution_show_button.addWidget(self.button_fullresolution)
+
+        vbox_fullresolution = QVBoxLayout()
+        vbox_fullresolution.addLayout(hbox_fullresolution_label)
+        vbox_fullresolution.addLayout(hbox_fullresolution_url_input)
+        vbox_fullresolution.addLayout(hbox_fullresolution_show_button)
+        vbox_fullresolution.addItem(QSpacerItem(1, 50))
+
+        hbox_fullresolution = QHBoxLayout()
+        hbox_fullresolution.addLayout(vbox_fullresolution)
+
+        # Loading indicator (spinner)
+        hbox_spinner = QHBoxLayout()
+        spinner_movie = abspath(__file__, "resources/loading.gif")
+        spinner = QMovie(spinner_movie)
+        spinner.setScaledSize(QSize(50, 50))
+        self.spinner_label = QLabel()
+        self.spinner_label.setMinimumSize(QSize(50, 50))
+        self.spinner_label.setMaximumSize(QSize(50, 50))
+        self.spinner_label.setMovie(spinner)
+        hbox_spinner.addWidget(self.spinner_label)
+        self.spinner_label.setHidden(True)
+
+        vbox_main = QVBoxLayout()
+        vbox_main.addLayout(hbox_spinner)
+        vbox_main.addLayout(hbox_fullresolution)
+
+        self.setLayout(vbox_main)
+
+    def on_fullresolution_url_changed(self, value):
+        self.fullresolution_url = value
+
+    def load_full_resolution(self):
+        def _show_img(layers):
+            for layer in layers:
+                data, meta, layer_type = layer
+                self.viewer.add_image(data, **meta)  # list of layers
+            self.spinner_label.movie().stop()
+            self.spinner_label.setHidden(True)
+            self.button_fullresolution.setEnabled(True)
+
+        @thread_worker(connect={"returned": _show_img})
+        def _load_img():
+            layer_data, hookimpl = read_data_with_plugins(
+                [self.fullresolution_url], plugin="napari-ome-zarr", stack=False
+            )
+            return layer_data
+
+        self.button_fullresolution.setEnabled(False)
+        self.spinner_label.setHidden(False)
+        self.spinner_label.movie().start()
+        _load_img()
 
 
 def get_swc_files(dataset_name):
@@ -624,4 +652,4 @@ def abspath(root, relpath):
 
 @napari_hook_implementation
 def napari_experimental_provide_dock_widget():
-    return [LoadBilData, LayerScaleControls]
+    return [LoadBilData, LoadMultiscaleData, LayerScaleControls]
