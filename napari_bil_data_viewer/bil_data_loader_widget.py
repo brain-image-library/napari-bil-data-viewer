@@ -62,37 +62,13 @@ class LoadBilData(QWidget):
         dataset_dropdown.currentTextChanged.connect(self.on_combobox_changed)
 
         # ----------------------- SWC controls -----------------------
-        visualize_label = QLabel("Visualize SWC:")
-        swc_url_label = QLabel("<strong>OR</strong><br/>paste URL:")
-        hbox_swc_url_label = QHBoxLayout()
-        hbox_swc_url_label.addWidget(swc_url_label)
-
-        swc_url_input = QLineEdit()
-        swc_url_input.setPlaceholderText("paste URL (optional)")
-        swc_url_input.textChanged.connect(self.on_swc_url_changed)
-        show_swc_button = QPushButton("Show SWC")
-        show_swc_button.clicked.connect(lambda: self.add_checkboxes(vbox_swc, swc_url_input.text()))
-
-        hbox_show_swc_btn = QHBoxLayout()
-        hbox_show_swc_btn.addWidget(show_swc_button)
-
-        hbox_swc_url_input = QHBoxLayout()
-        hbox_swc_url_input.addWidget(swc_url_input)
-
-        hbox_swc_label = QHBoxLayout()
-        hbox_swc_label.addWidget(visualize_label)
-
         vbox_swc = QVBoxLayout()
-        # vbox_swc.addLayout(hbox_swc_label)
-        vbox_swc.addLayout(hbox_swc_url_label)
-        vbox_swc.addLayout(hbox_swc_url_input)
-        vbox_swc.addLayout(hbox_show_swc_btn)
 
         hbox_swc = QHBoxLayout()
         hbox_swc.addLayout(vbox_swc)
 
         scroll = QScrollArea()
-        swc_groupbox = QGroupBox('pre-loaded SWC')
+        swc_groupbox = QGroupBox('pre-loaded neurons')
         swc_form = QFormLayout()
         swc_groupbox.setLayout(swc_form)
         scroll.setWidget(swc_groupbox)
@@ -103,7 +79,6 @@ class LoadBilData(QWidget):
         hscroll = QHBoxLayout()
         hscroll.addLayout(vscroll)
         vbox_scrollarea = QVBoxLayout()
-        vbox_scrollarea.addLayout(hbox_swc_label)
         vbox_scrollarea.addLayout(hscroll)
         hbox_scrollarea = QHBoxLayout()
         hbox_scrollarea.addLayout(vbox_scrollarea)
@@ -161,7 +136,6 @@ class LoadBilData(QWidget):
 
         # connect signals and slots
         self.load_button.clicked.connect(self.load_dataset)
-        # show_swc_button.clicked.connect(self.load_swc)
 
     def load_dataset(self):
 
@@ -193,7 +167,8 @@ class LoadBilData(QWidget):
         if not url:
             url = self.swc_url
 
-        points, shapes = load_bil_swc(url, self.dataset)
+        from .fMOST_datasets import datasets
+        points, shapes = load_bil_swc(url, datasets.get(self.dataset, get_datasets()[self.dataset]))
         data, meta, __ = shapes
         self.neuron_sections.append(len(data))
         soma, soma_meta, __ = points
@@ -209,8 +184,6 @@ class LoadBilData(QWidget):
             self.soma_layer = self.viewer.add_points(soma, **soma_meta)
         self.visualized_tracings.append(url)
 
-    def on_swc_url_changed(self, value):
-        self.swc_url = value
 
     def create_swc_checkboxes(self, dataset_name, vbox):
         # remove existing checkboxes
@@ -541,6 +514,119 @@ class LoadImageStackFromURL(QWidget):
         _load_img()
 
 
+class LoadNeuronMorphologyFromURL(QWidget):
+    def __init__(self, napari_viewer):
+        super().__init__()
+        self.viewer = napari_viewer
+        self.soma_layer = None
+        self.tracings_layer = None
+        self.swc_checkboxes = []
+        self.visualized_tracings = []
+        self.neuron_sections = []
+        self.init_ui()
+
+    def init_ui(self):
+        swc_url_label = QLabel("Load neuron morphology (.swc) from URL:")
+        hbox_swc_url_label = QHBoxLayout()
+        hbox_swc_url_label.addWidget(swc_url_label)
+
+        swc_url_input = QLineEdit()
+        swc_url_input.setPlaceholderText("paste URL (optional)")
+        swc_url_input.textChanged.connect(self.on_swc_url_changed)
+        show_swc_button = QPushButton("Show SWC")
+        show_swc_button.clicked.connect(lambda: self.add_checkboxes(vbox_swc, swc_url_input.text()))
+
+        hbox_show_swc_btn = QHBoxLayout()
+        hbox_show_swc_btn.addWidget(show_swc_button)
+
+        hbox_swc_url_input = QHBoxLayout()
+        hbox_swc_url_input.addWidget(swc_url_input)
+
+        vbox_swc = QVBoxLayout()
+        vbox_swc.addLayout(hbox_swc_url_label)
+        vbox_swc.addLayout(hbox_swc_url_input)
+        vbox_swc.addLayout(hbox_show_swc_btn)
+
+        hbox_swc = QHBoxLayout()
+        hbox_swc.addLayout(vbox_swc)
+
+        vbox_main = QVBoxLayout()
+        vbox_main.addLayout(hbox_swc)
+
+        self.setLayout(vbox_main)
+
+    def add_checkbox(self, vbox, swc_file_path):
+        if swc_file_path:
+            checkbox = QCheckBox(shorten_swc_path(swc_file_path))
+            checkbox.setChecked(True)
+            vbox.addWidget(checkbox)
+            checkbox.stateChanged.connect(lambda state, path=swc_file_path: self.visualize_swc(path, state))
+            self.swc_checkboxes.append(checkbox)
+            self.load_swc(swc_file_path)
+
+    def add_checkboxes(self, vbox, url):
+        # Check if the URL leads to a folder or a file
+        if url.endswith('.swc'):
+            self.add_checkbox(vbox, url)
+        else:
+            # assume folder with swc
+            swc_files = getFilesHttp(url, 'swc')
+            self.add_folder_checkboxes(vbox, swc_files)
+
+    def add_folder_checkboxes(self, vbox, swc_files):
+        # add a checkbox for each SWC file when URL points to a folder with multiple swc
+        for swc_file in swc_files:
+            self.add_checkbox(vbox, swc_file)
+
+    def on_swc_url_changed(self, value):
+        self.swc_url = value
+
+    def load_swc(self, url=None):
+        import numpy as np
+        from napari.layers.shapes import Shapes
+
+        if not url:
+            url = self.swc_url
+
+        points, shapes = load_bil_swc(url, {"scale": [1, 1, 1]})
+        data, meta, __ = shapes
+        meta['name'] = 'neuron tracings (URL)'
+        self.neuron_sections.append(len(data))
+        soma, soma_meta, __ = points
+        soma_meta['name'] = 'soma (URL)'
+        labels_color = next(color_generator)
+        meta["edge_color"] = labels_color[:3].reshape(1, 3)
+        if not self.tracings_layer or 'neuron tracings (URL)' not in self.viewer.layers:
+            self.tracings_layer = Shapes(ndim=3, **meta)
+            self.viewer.layers.append(self.tracings_layer)
+        self.tracings_layer.add_paths(data, edge_color=labels_color)
+        if self.soma_layer and 'soma (URL)' in self.viewer.layers:
+            self.soma_layer.add(soma)
+        else:
+            self.soma_layer = self.viewer.add_points(soma, **soma_meta)
+        self.visualized_tracings.append(url)
+
+    def hide_swc(self, url):
+        """
+        Hide unchecked neuron tracing.
+
+        Remove soma point from points layer, and paths from shapes layer.
+        :param url:
+        :return:
+        """
+        layer_data = self.tracings_layer.data
+        url_index = self.visualized_tracings.index(url)
+        self.soma_layer.selected_data = set([url_index])
+        self.soma_layer.remove_selected()
+        start_index = sum(self.neuron_sections[:url_index])
+        end_index = start_index + self.neuron_sections[url_index]
+        print(start_index, end_index)
+        del layer_data[start_index:end_index]
+        self.tracings_layer.data = layer_data
+        self.visualized_tracings.pop(url_index)
+        self.neuron_sections.pop(url_index)
+
+
 def get_swc_files(dataset_name):
     from .fMOST_swc import swc_datasets
     swc_files = swc_datasets.get(dataset_name, [])
@@ -623,9 +709,7 @@ def load_bil_data(dataset_info, name):
 def load_bil_swc(url, dataset):
     from neurom import load_morphology
     import numpy as np
-    from .fMOST_datasets import datasets
 
-    dataset = datasets.get(dataset, get_datasets()[dataset])
     response = requests.get(url)
     swc_data = response.text
     m = load_morphology(swc_data, 'swc')
@@ -693,4 +777,4 @@ def abspath(root, relpath):
 
 @napari_hook_implementation
 def napari_experimental_provide_dock_widget():
-    return [LoadBilData, LoadImageStackFromURL, LoadMultiscaleData, LayerScaleControls]
+    return [LoadBilData, LoadImageStackFromURL, LoadMultiscaleData, LoadNeuronMorphologyFromURL, LayerScaleControls]
