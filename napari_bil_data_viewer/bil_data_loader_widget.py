@@ -23,6 +23,7 @@ from bs4 import BeautifulSoup
 from skimage import io
 from dask import delayed
 from .dataset_info import get_datasets
+from .fMOST_datasets import datasets
 from qtpy.QtCore import Qt, QSize
 from qtpy.QtGui import QMovie
 from qtpy.QtWidgets import (
@@ -44,7 +45,6 @@ class LoadCuratedDatasets(QWidget):
         self.datasets = sorted([key for key in get_datasets()])
         self.dataset = "mouseID_19032508-191171" if len(self.datasets) else None
         self.swc_url = ""
-        self.dataset_url = ""
         self.visualized_tracings = []
         self.neuron_sections = []
         self.load_button = QPushButton("Load Dataset")
@@ -57,6 +57,8 @@ class LoadCuratedDatasets(QWidget):
     def init_ui(self):
         # create widgets
         dataset_label = QLabel("Select Dataset:")
+        self.dataset_at_bil_label = QLabel(f'<a href="{self.url_at_bil}" style="color:gray;">on BIL website</a>')
+        self.dataset_at_bil_label.setOpenExternalLinks(True)
         dataset_dropdown = QComboBox()
         dataset_dropdown.addItems(self.datasets)
         dataset_dropdown.currentTextChanged.connect(self.on_combobox_changed)
@@ -86,16 +88,20 @@ class LoadCuratedDatasets(QWidget):
         # ----------------------- Create layout -----------------------
         vbox_main = QVBoxLayout()
         hbox_dataset = QHBoxLayout()
+
         hbox_dataset_label = QHBoxLayout()
         hbox_dataset_label.addWidget(dataset_label)
         hbox_dataset_dropdown = QHBoxLayout()
         hbox_dataset_dropdown.addWidget(dataset_dropdown)
+        hbox_dataset_at_bil_label = QHBoxLayout()
+        hbox_dataset_at_bil_label.addWidget(self.dataset_at_bil_label)
         hbox_dataset_load_btn = QHBoxLayout()
         hbox_dataset_load_btn.addWidget(self.load_button)
 
         vbox_dataset = QVBoxLayout()
         vbox_dataset.addLayout(hbox_dataset_label)
         vbox_dataset.addLayout(hbox_dataset_dropdown)
+        vbox_dataset.addLayout(hbox_dataset_at_bil_label)
         vbox_dataset.addItem(QSpacerItem(1, 10))
         vbox_dataset.addLayout(hbox_dataset_load_btn)
         vbox_dataset.addItem(QSpacerItem(1, 25))
@@ -151,6 +157,7 @@ class LoadCuratedDatasets(QWidget):
 
     def on_combobox_changed(self, value):
         self.dataset = value
+        self.dataset_at_bil_label.setText(f'<a href="{self.url_at_bil}" style="color:gray;">on BIL website</a>')
 
     def load_swc(self, url=None):
         import numpy as np
@@ -159,7 +166,6 @@ class LoadCuratedDatasets(QWidget):
         if not url:
             url = self.swc_url
 
-        from .fMOST_datasets import datasets
         points, shapes = load_bil_swc(url, datasets.get(self.dataset, get_datasets()[self.dataset]))
         data, meta, __ = shapes
         self.neuron_sections.append(len(data))
@@ -255,6 +261,15 @@ class LoadCuratedDatasets(QWidget):
     def uncheck_swc_checkboxes(self):
         for checkbox in self.swc_checkboxes:
             checkbox.setChecked(False)
+
+    @property
+    def url_at_bil(self):
+        try:
+            url = datasets[self.dataset]['url'][0]
+            url = url[:url.rfind('/')]
+        except (KeyError, IndexError):
+            url = ""
+        return url
 
 
 class LayerScaleControls(QWidget):
