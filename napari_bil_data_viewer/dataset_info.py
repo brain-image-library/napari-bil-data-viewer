@@ -1239,10 +1239,10 @@ def get_datasets():
                                      ],
                                      },
          'mouseID_19032508-191171': {'contrast_limits': [0,  450],
-                                     'scale': (100, 0.35, 0.35),
+                                     'scale': (100, 3.5, 3.5),
                                      'url': [
                                          # 'https://download.brainimagelibrary.org/00/9c/009c1e6fcc03ebac/mouseID_19032508-191171/CH1',
-                                         'https://download.brainimagelibrary.org/00/9c/009c1e6fcc03ebac/mouseID_19032508-191171/CH1_0.35_100um',
+                                         # 'https://download.brainimagelibrary.org/00/9c/009c1e6fcc03ebac/mouseID_19032508-191171/CH1_0.35_100um',  # TODO: disabled for faster loading
                                          'https://download.brainimagelibrary.org/00/9c/009c1e6fcc03ebac/mouseID_19032508-191171/CH1_3.5_100um'
                                      ],
                                      },
