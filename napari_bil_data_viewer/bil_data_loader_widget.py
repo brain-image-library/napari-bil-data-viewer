@@ -388,26 +388,33 @@ class LoadMultiscaleDataFromURL(QWidget):
         super().__init__()
         self.viewer = napari_viewer
         self.fullresolution_url = ""
+        self.example_url = "https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.1/4495402.zarr"
         self.init_ui()
 
     def init_ui(self):
-        fullresolution_label = QLabel("Visualize multi-scale data (.ome.zarr):")
-        url_input_fullresolution = QLineEdit()
-        url_input_fullresolution.setPlaceholderText("paste URL")
-        url_input_fullresolution.textChanged.connect(self.on_fullresolution_url_changed)
+        fullresolution_label = QLabel("Visualize multi-scale data (.zarr):")
+        self.url_input_fullresolution = QLineEdit()
+        self.url_input_fullresolution.setPlaceholderText("paste URL")
+        self.url_input_fullresolution.setToolTip(f"example: {self.example_url}")
+        self.url_input_fullresolution.textChanged.connect(self.on_fullresolution_url_changed)
+        paste_example_url_label = QLabel('<a href="#" style="color:gray;">paste example URL</a>')
+        paste_example_url_label.linkActivated.connect(self._on_paste_example_url_clicked)
         self.button_fullresolution = QPushButton("Load Dataset")
         self.button_fullresolution.clicked.connect(self.load_full_resolution)
 
         hbox_fullresolution_label = QHBoxLayout()
         hbox_fullresolution_label.addWidget(fullresolution_label)
         hbox_fullresolution_url_input = QHBoxLayout()
-        hbox_fullresolution_url_input.addWidget(url_input_fullresolution)
+        hbox_fullresolution_url_input.addWidget(self.url_input_fullresolution)
+        hbox_paste_example_url_label = QHBoxLayout()
+        hbox_paste_example_url_label.addWidget(paste_example_url_label)
         hbox_fullresolution_show_button = QHBoxLayout()
         hbox_fullresolution_show_button.addWidget(self.button_fullresolution)
 
         vbox_fullresolution = QVBoxLayout()
         vbox_fullresolution.addLayout(hbox_fullresolution_label)
         vbox_fullresolution.addLayout(hbox_fullresolution_url_input)
+        vbox_fullresolution.addLayout(hbox_paste_example_url_label)
         vbox_fullresolution.addLayout(hbox_fullresolution_show_button)
 
         hbox_fullresolution = QHBoxLayout()
@@ -427,6 +434,7 @@ class LoadMultiscaleDataFromURL(QWidget):
 
         vbox_main = QVBoxLayout()
         vbox_main.addLayout(BILInfoHbox())
+        vbox_main.addItem(QSpacerItem(1, 25))
         vbox_main.addLayout(hbox_spinner)
         vbox_main.addLayout(hbox_fullresolution)
 
@@ -456,17 +464,24 @@ class LoadMultiscaleDataFromURL(QWidget):
         self.spinner_label.movie().start()
         _load_img()
 
+    def _on_paste_example_url_clicked(self):
+        self.url_input_fullresolution.setText(self.example_url)
+
 
 class LoadImageStackFromURL(QWidget):
     def __init__(self, napari_viewer):
         super().__init__()
         self.viewer = napari_viewer
+        self.example_url = "https://download.brainimagelibrary.org/56/fb/56fb1b25ca6b5fae/OTR-Venus/OTR-Venus_P14_F5/stitchedImage_ch2/"
         self.init_ui()
 
     def init_ui(self):
-        dataset_url_input = QLineEdit()
-        dataset_url_input.setPlaceholderText("paste URL")
-        dataset_url_input.textChanged.connect(self.on_dataset_url_changed)
+        self.dataset_url_input = QLineEdit()
+        self.dataset_url_input.setPlaceholderText("paste URL")
+        self.dataset_url_input.setToolTip(f"example: {self.example_url}")
+        self.dataset_url_input.textChanged.connect(self.on_dataset_url_changed)
+        paste_example_url_label = QLabel('<a href="#" style="color:gray;">paste example URL</a>')
+        paste_example_url_label.linkActivated.connect(self._on_paste_example_url_clicked)
         dataset_url_label = QLabel("Load image stack (tif, tiff, jp2):")
         self.load_button = QPushButton("Load Dataset")
         self.load_button.clicked.connect(self.load_dataset)
@@ -485,9 +500,11 @@ class LoadImageStackFromURL(QWidget):
 
         vbox_main = QVBoxLayout()
         vbox_main.addLayout(BILInfoHbox())
+        vbox_main.addItem(QSpacerItem(1, 25))
         vbox_main.addWidget(dataset_url_label)
         vbox_main.addLayout(hbox_spinner)
-        vbox_main.addWidget(dataset_url_input)
+        vbox_main.addWidget(self.dataset_url_input)
+        vbox_main.addWidget(paste_example_url_label)
         vbox_main.addWidget(self.load_button)
 
         self.setLayout(vbox_main)
@@ -521,6 +538,9 @@ class LoadImageStackFromURL(QWidget):
         self.spinner_label.movie().start()
         _load_img()
 
+    def _on_paste_example_url_clicked(self):
+        self.dataset_url_input.setText(self.example_url)
+
 
 class LoadNeuronMorphologyFromURL(QWidget):
     def __init__(self, napari_viewer):
@@ -531,6 +551,7 @@ class LoadNeuronMorphologyFromURL(QWidget):
         self.swc_checkboxes = []
         self.visualized_tracings = []
         self.neuron_sections = []
+        self.example_url = "https://download.brainimagelibrary.org/3a/c1/3ac1bdc022d0da78/191171-20/mouseID_191171_20.swc"
         self.init_ui()
 
     def init_ui(self):
@@ -538,21 +559,28 @@ class LoadNeuronMorphologyFromURL(QWidget):
         hbox_swc_url_label = QHBoxLayout()
         hbox_swc_url_label.addWidget(swc_url_label)
 
-        swc_url_input = QLineEdit()
-        swc_url_input.setPlaceholderText("paste URL (optional)")
-        swc_url_input.textChanged.connect(self.on_swc_url_changed)
+        self.swc_url_input = QLineEdit()
+        self.swc_url_input.setPlaceholderText("paste URL")
+        self.swc_url_input.setToolTip(f"example: {self.example_url}")
+        self.swc_url_input.textChanged.connect(self.on_swc_url_changed)
+        paste_example_url_label = QLabel('<a href="#" style="color:gray;">paste example URL</a>')
+        paste_example_url_label.linkActivated.connect(self._on_paste_example_url_clicked)
         show_swc_button = QPushButton("Show SWC")
-        show_swc_button.clicked.connect(lambda: self.add_checkboxes(vbox_swc, swc_url_input.text()))
+        show_swc_button.clicked.connect(lambda: self.add_checkboxes(vbox_swc, self.swc_url_input.text()))
 
         hbox_show_swc_btn = QHBoxLayout()
         hbox_show_swc_btn.addWidget(show_swc_button)
 
         hbox_swc_url_input = QHBoxLayout()
-        hbox_swc_url_input.addWidget(swc_url_input)
+        hbox_swc_url_input.addWidget(self.swc_url_input)
+
+        hbox_paste_example_url_label = QHBoxLayout()
+        hbox_paste_example_url_label.addWidget(paste_example_url_label)
 
         vbox_swc = QVBoxLayout()
         vbox_swc.addLayout(hbox_swc_url_label)
         vbox_swc.addLayout(hbox_swc_url_input)
+        vbox_swc.addLayout(hbox_paste_example_url_label)
         vbox_swc.addLayout(hbox_show_swc_btn)
 
         hbox_swc = QHBoxLayout()
@@ -560,6 +588,7 @@ class LoadNeuronMorphologyFromURL(QWidget):
 
         vbox_main = QVBoxLayout()
         vbox_main.addLayout(BILInfoHbox())
+        vbox_main.addItem(QSpacerItem(1, 25))
         vbox_main.addLayout(hbox_swc)
 
         self.setLayout(vbox_main)
@@ -572,6 +601,15 @@ class LoadNeuronMorphologyFromURL(QWidget):
             checkbox.stateChanged.connect(lambda state, path=swc_file_path: self.visualize_swc(path, state))
             self.swc_checkboxes.append(checkbox)
             self.load_swc(swc_file_path)
+
+    def visualize_swc(self, path_to_swc, state):
+        print("state", state)
+        if state == Qt.Checked:
+            print(f"Visualizing {path_to_swc}")
+            self.load_swc(path_to_swc)
+        else:
+            print(f"Hiding {path_to_swc}")
+            self.hide_swc(path_to_swc)
 
     def add_checkboxes(self, vbox, url):
         # Check if the URL leads to a folder or a file
@@ -634,6 +672,9 @@ class LoadNeuronMorphologyFromURL(QWidget):
         self.tracings_layer.data = layer_data
         self.visualized_tracings.pop(url_index)
         self.neuron_sections.pop(url_index)
+
+    def _on_paste_example_url_clicked(self):
+        self.swc_url_input.setText(self.example_url)
 
 
 def get_swc_files(dataset_name):
