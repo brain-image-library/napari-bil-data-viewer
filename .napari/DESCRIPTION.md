@@ -125,3 +125,12 @@ Add scale controls for layers
 <u>**v0.4.2:**</u>
 
 Add URL input to visualize image stacks (tif, tiff, jp2)
+
+<u>**v0.5.0:**</u>
+
+Split the plugin into 5 widgets:<br/>
+- Load Curated Datasets
+- Load Image Stack From URL
+- Load Multiscale Data From URL
+- Load Neuron Morphology From URL
+- Layer Scale Controls
