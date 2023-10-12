@@ -121,3 +121,7 @@ Added support for multiscale OME zarr data
 <u>**v0.4.0:**</u>
 
 Add scale controls for layers
+
+<u>**v0.4.2:**</u>
+
+Add URL input to visualize image stacks (tif, tiff, jp2)
