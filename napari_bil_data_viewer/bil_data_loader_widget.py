@@ -59,8 +59,10 @@ class LoadCuratedDatasets(QWidget):
         dataset_label = QLabel("Select Dataset:")
         self.dataset_at_bil_label = QLabel(f'<a href="{self.url_at_bil}" style="color:gray;">on BIL website</a>')
         self.dataset_at_bil_label.setOpenExternalLinks(True)
+        self.dataset_at_bil_label.setToolTip("view selected dataset on BIL website")
         dataset_dropdown = QComboBox()
         dataset_dropdown.addItems(self.datasets)
+        dataset_dropdown.setToolTip("summary fMOST datasets")
         dataset_dropdown.currentTextChanged.connect(self.on_combobox_changed)
 
         # ----------------------- SWC controls -----------------------
@@ -187,6 +189,7 @@ class LoadCuratedDatasets(QWidget):
         # create checkboxes for each SWC file
         for swc_file in swc_files:
             checkbox = QCheckBox(shorten_swc_path(swc_file))
+            checkbox.setToolTip("best if vewed in 3D")
             vbox.addWidget(checkbox)
             self.swc_checkboxes.append(checkbox)
             checkbox.stateChanged.connect(lambda state, path=swc_file: self.visualize_swc(path, state))
@@ -203,6 +206,7 @@ class LoadCuratedDatasets(QWidget):
     def add_checkbox(self, vbox, swc_file_path):
         if swc_file_path:
             checkbox = QCheckBox(shorten_swc_path(swc_file_path))
+            checkbox.setToolTip("best if vewed in 3D")
             checkbox.setChecked(True)
             vbox.addWidget(checkbox)
             checkbox.stateChanged.connect(lambda state, path=swc_file_path: self.visualize_swc(path, state))
@@ -315,6 +319,7 @@ class LayerScaleControls(QWidget):
         self.scale_dropdown = QComboBox()
         self.scale_dropdown.currentTextChanged.connect(self.on_scale_dropdown_changed)
         self.scale_dropdown.addItems([x.name for x in self.viewer.layers])
+        self.scale_dropdown.setToolTip("select layer to be rescaled")
         hbox_scale_dropdown.addWidget(scale_dropdown_label)
         hbox_scale_dropdown.addWidget(self.scale_dropdown)
 
@@ -594,6 +599,7 @@ class LoadNeuronMorphologyFromURL(QWidget):
         if swc_file_path:
             checkbox = QCheckBox(shorten_swc_path(swc_file_path))
             checkbox.setChecked(True)
+            checkbox.setToolTip("best if viewed in 3D")
             vbox.addWidget(checkbox)
             checkbox.stateChanged.connect(lambda state, path=swc_file_path: self.visualize_swc(path, state))
             self.swc_checkboxes.append(checkbox)
