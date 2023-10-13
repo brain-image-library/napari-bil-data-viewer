@@ -48,7 +48,7 @@ class LoadCuratedDatasets(QWidget):
         self.visualized_tracings = []
         self.neuron_sections = []
         self.load_button = QPushButton("Load Dataset")
-        self.spinner_label = QLabel()
+        self.spinner_label = SpinnerLabel()
         self.swc_checkboxes = []
         self.init_ui()
         napari_viewer.layers.events.removed.connect(self._on_layer_deletion)
@@ -109,14 +109,7 @@ class LoadCuratedDatasets(QWidget):
         hbox_dataset.addLayout(vbox_dataset)
 
         hbox_spinner = QHBoxLayout()
-        spinner_movie = abspath(__file__, "resources/loading.gif")
-        spinner = QMovie(spinner_movie)
-        spinner.setScaledSize(QSize(50, 50))
-        self.spinner_label.setMinimumSize(QSize(50, 50))
-        self.spinner_label.setMaximumSize(QSize(50, 50))
-        self.spinner_label.setMovie(spinner)
         hbox_spinner.addWidget(self.spinner_label)
-        self.spinner_label.setHidden(True)
 
         vbox_main.addLayout(BILInfoHbox())
         vbox_main.addItem(QSpacerItem(1, 25))
@@ -389,6 +382,7 @@ class LoadMultiscaleDataFromURL(QWidget):
         self.viewer = napari_viewer
         self.fullresolution_url = ""
         self.example_url = "https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.1/4495402.zarr"
+        self.spinner_label = SpinnerLabel()
         self.init_ui()
 
     def init_ui(self):
@@ -425,15 +419,7 @@ class LoadMultiscaleDataFromURL(QWidget):
 
         # Loading indicator (spinner)
         hbox_spinner = QHBoxLayout()
-        spinner_movie = abspath(__file__, "resources/loading.gif")
-        spinner = QMovie(spinner_movie)
-        spinner.setScaledSize(QSize(50, 50))
-        self.spinner_label = QLabel()
-        self.spinner_label.setMinimumSize(QSize(50, 50))
-        self.spinner_label.setMaximumSize(QSize(50, 50))
-        self.spinner_label.setMovie(spinner)
         hbox_spinner.addWidget(self.spinner_label)
-        self.spinner_label.setHidden(True)
 
         vbox_main = QVBoxLayout()
         vbox_main.addLayout(BILInfoHbox())
@@ -479,6 +465,7 @@ class LoadImageStackFromURL(QWidget):
         super().__init__()
         self.viewer = napari_viewer
         self.example_url = "https://download.brainimagelibrary.org/56/fb/56fb1b25ca6b5fae/OTR-Venus/OTR-Venus_P14_F5/stitchedImage_ch2/"
+        self.spinner_label = SpinnerLabel()
         self.init_ui()
 
     def init_ui(self):
@@ -496,15 +483,7 @@ class LoadImageStackFromURL(QWidget):
 
         # Loading indicator (spinner)
         hbox_spinner = QHBoxLayout()
-        spinner_movie = abspath(__file__, "resources/loading.gif")
-        spinner = QMovie(spinner_movie)
-        spinner.setScaledSize(QSize(50, 50))
-        self.spinner_label = QLabel()
-        self.spinner_label.setMinimumSize(QSize(50, 50))
-        self.spinner_label.setMaximumSize(QSize(50, 50))
-        self.spinner_label.setMovie(spinner)
         hbox_spinner.addWidget(self.spinner_label)
-        self.spinner_label.setHidden(True)
 
         hbox_paste_example_url_label = QHBoxLayout()
         hbox_paste_example_url_label.addWidget(clear_label)
@@ -786,6 +765,18 @@ class BILInfoHbox(QHBoxLayout):
         bil_info_label.setOpenExternalLinks(True)
         self.addWidget(bil_logo_label)
         self.addWidget(bil_info_label)
+
+
+class SpinnerLabel(QLabel):
+    def __init__(self):
+        super().__init__()
+        spinner_movie = abspath(__file__, "resources/loading.gif")
+        spinner = QMovie(spinner_movie)
+        spinner.setScaledSize(QSize(50, 50))
+        self.setMinimumSize(QSize(50, 50))
+        self.setMaximumSize(QSize(50, 50))
+        self.setMovie(spinner)
+        self.setHidden(True)
 
 
 def load_bil_swc(url, dataset):
