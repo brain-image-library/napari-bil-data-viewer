@@ -40,6 +40,7 @@ class LoadCuratedDatasets(QWidget):
     def __init__(self, napari_viewer):
         super().__init__()
         self.viewer = napari_viewer
+        self.image_layer = None
         self.soma_layer = None
         self.tracings_layer = None
         self.datasets = sorted([key for key in get_datasets()])
@@ -134,7 +135,13 @@ class LoadCuratedDatasets(QWidget):
 
         def _show_img(args):
             data, meta, layer_type = args
-            self.viewer.add_image(data, **meta)
+            if self.image_layer and self.image_layer in self.viewer.layers:
+                self.viewer.layers.remove(self.image_layer)
+            if self.tracings_layer and self.tracings_layer in self.viewer.layers:
+                self.viewer.layers.remove(self.tracings_layer)
+            if self.soma_layer and self.soma_layer in self.viewer.layers:
+                self.viewer.layers.remove(self.soma_layer)
+            self.image_layer = self.viewer.add_image(data, **meta)
             self.spinner_label.movie().stop()
             self.spinner_label.setHidden(True)
             self.load_button.setEnabled(True)
