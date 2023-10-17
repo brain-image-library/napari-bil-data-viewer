@@ -22,6 +22,7 @@ import requests
 from bs4 import BeautifulSoup
 from skimage import io
 from dask import delayed
+import tifffile
 from .dataset_info import get_datasets
 from .fMOST_datasets import datasets
 from qtpy.QtCore import Qt, QSize
@@ -735,19 +736,21 @@ def load_bil_data(dataset_info, name):
 
     
     data = []
-    for ii in bilData:
+    for data_url in bilData:
         for ext in supported_file_types:
-            images = sorted(getFilesHttp(ii, ext))
+            images = sorted(getFilesHttp(data_url, ext))
             if len(images):
                 images = [fsspec.open(x,'rb') for x in images]
                 data.append(images)
     
-    
-
-    for idx,ii in enumerate(data):
-        sampleImage = getImage(ii[0])
-        images = [delayed(getImage)(x) for x in ii]
-        images = [da.from_delayed(x, sampleImage.shape,dtype=sampleImage.dtype) for x in images]
+    for idx, url_files in enumerate(data):
+        if url_files[0].path.endswith('.tif') or url_files[0].path.endswith('.tiff'):
+            store = tifffile.imread(url_files[0], aszarr=True)
+            first_img = da.from_zarr(store)
+        else:
+            first_img = getImage(url_files[0])
+        images = [delayed(getImage)(x) for x in url_files]
+        images = [da.from_delayed(x, first_img.shape, dtype=first_img.dtype) for x in images]
         images = da.stack(images)
         data[idx] = images
 
