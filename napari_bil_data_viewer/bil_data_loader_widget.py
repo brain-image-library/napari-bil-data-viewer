@@ -25,6 +25,7 @@ from dask import delayed
 import tifffile
 from .dataset_info import get_datasets
 from .fMOST_datasets import datasets
+from .dataset_metadata import dataset_metadata
 from qtpy.QtCore import Qt, QSize
 from qtpy.QtGui import QMovie
 from qtpy.QtWidgets import (
@@ -62,6 +63,9 @@ class LoadCuratedDatasets(QWidget):
         self.dataset_at_bil_label = QLabel(f'<a href="{self.url_at_bil}" style="color:gray;">on BIL website</a>')
         self.dataset_at_bil_label.setOpenExternalLinks(True)
         self.dataset_at_bil_label.setToolTip("view selected dataset on BIL website")
+        self.metadata_label = QLabel(f'<a href="{self.metadata_url}" style="color:gray;">metadata</a>')
+        self.metadata_label.setOpenExternalLinks(True)
+        self.metadata_label.setToolTip("view selected dataset on BIL website")
         dataset_dropdown = QComboBox()
         dataset_dropdown.addItems(self.datasets)
         dataset_dropdown.setToolTip("summary fMOST datasets")
@@ -99,6 +103,7 @@ class LoadCuratedDatasets(QWidget):
         hbox_dataset_dropdown.addWidget(dataset_dropdown)
         hbox_dataset_at_bil_label = QHBoxLayout()
         hbox_dataset_at_bil_label.addWidget(self.dataset_at_bil_label)
+        hbox_dataset_at_bil_label.addWidget(self.metadata_label)
         hbox_dataset_load_btn = QHBoxLayout()
         hbox_dataset_load_btn.addWidget(self.load_button)
 
@@ -161,6 +166,7 @@ class LoadCuratedDatasets(QWidget):
     def on_combobox_changed(self, value):
         self.dataset = value
         self.dataset_at_bil_label.setText(f'<a href="{self.url_at_bil}" style="color:gray;">on BIL website</a>')
+        self.metadata_label.setText(f'<a href="{self.metadata_url}" style="color:gray;">metadata</a>')
 
     def load_swc(self, url=None):
         import numpy as np
@@ -275,6 +281,10 @@ class LoadCuratedDatasets(QWidget):
         except (KeyError, IndexError):
             url = ""
         return url
+
+    @property
+    def metadata_url(self):
+        return dataset_metadata.get(self.dataset, "#")
 
 
 class LayerScaleControls(QWidget):
