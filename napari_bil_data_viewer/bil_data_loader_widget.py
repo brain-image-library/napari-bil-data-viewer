@@ -22,8 +22,10 @@ import requests
 from bs4 import BeautifulSoup
 from skimage import io
 from dask import delayed
+import tifffile
 from .dataset_info import get_datasets
 from .fMOST_datasets import datasets
+from .dataset_metadata import dataset_metadata
 from qtpy.QtCore import Qt, QSize
 from qtpy.QtGui import QMovie
 from qtpy.QtWidgets import (
@@ -40,6 +42,7 @@ class LoadCuratedDatasets(QWidget):
     def __init__(self, napari_viewer):
         super().__init__()
         self.viewer = napari_viewer
+        self.image_layer = None
         self.soma_layer = None
         self.tracings_layer = None
         self.datasets = sorted([key for key in get_datasets()])
@@ -48,7 +51,7 @@ class LoadCuratedDatasets(QWidget):
         self.visualized_tracings = []
         self.neuron_sections = []
         self.load_button = QPushButton("Load Dataset")
-        self.spinner_label = QLabel()
+        self.spinner_label = SpinnerLabel()
         self.swc_checkboxes = []
         self.init_ui()
         napari_viewer.layers.events.removed.connect(self._on_layer_deletion)
@@ -59,8 +62,13 @@ class LoadCuratedDatasets(QWidget):
         dataset_label = QLabel("Select Dataset:")
         self.dataset_at_bil_label = QLabel(f'<a href="{self.url_at_bil}" style="color:gray;">on BIL website</a>')
         self.dataset_at_bil_label.setOpenExternalLinks(True)
+        self.dataset_at_bil_label.setToolTip("view selected dataset on BIL website")
+        self.metadata_label = QLabel(f'<a href="{self.metadata_url}" style="color:gray;">metadata</a>')
+        self.metadata_label.setOpenExternalLinks(True)
+        self.metadata_label.setToolTip("view metadata for selected dataset on BIL website")
         dataset_dropdown = QComboBox()
         dataset_dropdown.addItems(self.datasets)
+        dataset_dropdown.setToolTip("summary fMOST datasets")
         dataset_dropdown.currentTextChanged.connect(self.on_combobox_changed)
 
         # ----------------------- SWC controls -----------------------
@@ -95,6 +103,7 @@ class LoadCuratedDatasets(QWidget):
         hbox_dataset_dropdown.addWidget(dataset_dropdown)
         hbox_dataset_at_bil_label = QHBoxLayout()
         hbox_dataset_at_bil_label.addWidget(self.dataset_at_bil_label)
+        hbox_dataset_at_bil_label.addWidget(self.metadata_label)
         hbox_dataset_load_btn = QHBoxLayout()
         hbox_dataset_load_btn.addWidget(self.load_button)
 
@@ -109,14 +118,7 @@ class LoadCuratedDatasets(QWidget):
         hbox_dataset.addLayout(vbox_dataset)
 
         hbox_spinner = QHBoxLayout()
-        spinner_movie = abspath(__file__, "resources/loading.gif")
-        spinner = QMovie(spinner_movie)
-        spinner.setScaledSize(QSize(50, 50))
-        self.spinner_label.setMinimumSize(QSize(50, 50))
-        self.spinner_label.setMaximumSize(QSize(50, 50))
-        self.spinner_label.setMovie(spinner)
         hbox_spinner.addWidget(self.spinner_label)
-        self.spinner_label.setHidden(True)
 
         vbox_main.addLayout(BILInfoHbox())
         vbox_main.addItem(QSpacerItem(1, 25))
@@ -139,7 +141,13 @@ class LoadCuratedDatasets(QWidget):
 
         def _show_img(args):
             data, meta, layer_type = args
-            self.viewer.add_image(data, **meta)
+            if self.image_layer and self.image_layer in self.viewer.layers:
+                self.viewer.layers.remove(self.image_layer)
+            if self.tracings_layer and self.tracings_layer in self.viewer.layers:
+                self.viewer.layers.remove(self.tracings_layer)
+            if self.soma_layer and self.soma_layer in self.viewer.layers:
+                self.viewer.layers.remove(self.soma_layer)
+            self.image_layer = self.viewer.add_image(data, **meta)
             self.spinner_label.movie().stop()
             self.spinner_label.setHidden(True)
             self.load_button.setEnabled(True)
@@ -158,6 +166,7 @@ class LoadCuratedDatasets(QWidget):
     def on_combobox_changed(self, value):
         self.dataset = value
         self.dataset_at_bil_label.setText(f'<a href="{self.url_at_bil}" style="color:gray;">on BIL website</a>')
+        self.metadata_label.setText(f'<a href="{self.metadata_url}" style="color:gray;">metadata</a>')
 
     def load_swc(self, url=None):
         import numpy as np
@@ -194,6 +203,7 @@ class LoadCuratedDatasets(QWidget):
         # create checkboxes for each SWC file
         for swc_file in swc_files:
             checkbox = QCheckBox(shorten_swc_path(swc_file))
+            checkbox.setToolTip("best if vewed in 3D")
             vbox.addWidget(checkbox)
             self.swc_checkboxes.append(checkbox)
             checkbox.stateChanged.connect(lambda state, path=swc_file: self.visualize_swc(path, state))
@@ -210,6 +220,7 @@ class LoadCuratedDatasets(QWidget):
     def add_checkbox(self, vbox, swc_file_path):
         if swc_file_path:
             checkbox = QCheckBox(shorten_swc_path(swc_file_path))
+            checkbox.setToolTip("best if vewed in 3D")
             checkbox.setChecked(True)
             vbox.addWidget(checkbox)
             checkbox.stateChanged.connect(lambda state, path=swc_file_path: self.visualize_swc(path, state))
@@ -271,6 +282,10 @@ class LoadCuratedDatasets(QWidget):
             url = ""
         return url
 
+    @property
+    def metadata_url(self):
+        return dataset_metadata.get(self.dataset, "#")
+
 
 class LayerScaleControls(QWidget):
     def __init__(self, napari_viewer):
@@ -322,6 +337,7 @@ class LayerScaleControls(QWidget):
         self.scale_dropdown = QComboBox()
         self.scale_dropdown.currentTextChanged.connect(self.on_scale_dropdown_changed)
         self.scale_dropdown.addItems([x.name for x in self.viewer.layers])
+        self.scale_dropdown.setToolTip("select layer to be rescaled")
         hbox_scale_dropdown.addWidget(scale_dropdown_label)
         hbox_scale_dropdown.addWidget(self.scale_dropdown)
 
@@ -389,6 +405,7 @@ class LoadMultiscaleDataFromURL(QWidget):
         self.viewer = napari_viewer
         self.fullresolution_url = ""
         self.example_url = "https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.1/4495402.zarr"
+        self.spinner_label = SpinnerLabel()
         self.init_ui()
 
     def init_ui(self):
@@ -425,15 +442,7 @@ class LoadMultiscaleDataFromURL(QWidget):
 
         # Loading indicator (spinner)
         hbox_spinner = QHBoxLayout()
-        spinner_movie = abspath(__file__, "resources/loading.gif")
-        spinner = QMovie(spinner_movie)
-        spinner.setScaledSize(QSize(50, 50))
-        self.spinner_label = QLabel()
-        self.spinner_label.setMinimumSize(QSize(50, 50))
-        self.spinner_label.setMaximumSize(QSize(50, 50))
-        self.spinner_label.setMovie(spinner)
         hbox_spinner.addWidget(self.spinner_label)
-        self.spinner_label.setHidden(True)
 
         vbox_main = QVBoxLayout()
         vbox_main.addLayout(BILInfoHbox())
@@ -479,6 +488,7 @@ class LoadImageStackFromURL(QWidget):
         super().__init__()
         self.viewer = napari_viewer
         self.example_url = "https://download.brainimagelibrary.org/56/fb/56fb1b25ca6b5fae/OTR-Venus/OTR-Venus_P14_F5/stitchedImage_ch2/"
+        self.spinner_label = SpinnerLabel()
         self.init_ui()
 
     def init_ui(self):
@@ -496,15 +506,7 @@ class LoadImageStackFromURL(QWidget):
 
         # Loading indicator (spinner)
         hbox_spinner = QHBoxLayout()
-        spinner_movie = abspath(__file__, "resources/loading.gif")
-        spinner = QMovie(spinner_movie)
-        spinner.setScaledSize(QSize(50, 50))
-        self.spinner_label = QLabel()
-        self.spinner_label.setMinimumSize(QSize(50, 50))
-        self.spinner_label.setMaximumSize(QSize(50, 50))
-        self.spinner_label.setMovie(spinner)
         hbox_spinner.addWidget(self.spinner_label)
-        self.spinner_label.setHidden(True)
 
         hbox_paste_example_url_label = QHBoxLayout()
         hbox_paste_example_url_label.addWidget(clear_label)
@@ -615,6 +617,7 @@ class LoadNeuronMorphologyFromURL(QWidget):
         if swc_file_path:
             checkbox = QCheckBox(shorten_swc_path(swc_file_path))
             checkbox.setChecked(True)
+            checkbox.setToolTip("best if viewed in 3D")
             vbox.addWidget(checkbox)
             checkbox.stateChanged.connect(lambda state, path=swc_file_path: self.visualize_swc(path, state))
             self.swc_checkboxes.append(checkbox)
@@ -743,19 +746,21 @@ def load_bil_data(dataset_info, name):
 
     
     data = []
-    for ii in bilData:
+    for data_url in bilData:
         for ext in supported_file_types:
-            images = sorted(getFilesHttp(ii, ext))
+            images = sorted(getFilesHttp(data_url, ext))
             if len(images):
                 images = [fsspec.open(x,'rb') for x in images]
                 data.append(images)
     
-    
-
-    for idx,ii in enumerate(data):
-        sampleImage = getImage(ii[0])
-        images = [delayed(getImage)(x) for x in ii]
-        images = [da.from_delayed(x, sampleImage.shape,dtype=sampleImage.dtype) for x in images]
+    for idx, url_files in enumerate(data):
+        if url_files[0].path.endswith('.tif') or url_files[0].path.endswith('.tiff'):
+            store = tifffile.imread(url_files[0], aszarr=True)
+            first_img = da.from_zarr(store)
+        else:
+            first_img = getImage(url_files[0])
+        images = [delayed(getImage)(x) for x in url_files]
+        images = [da.from_delayed(x, first_img.shape, dtype=first_img.dtype) for x in images]
         images = da.stack(images)
         data[idx] = images
 
@@ -786,6 +791,18 @@ class BILInfoHbox(QHBoxLayout):
         bil_info_label.setOpenExternalLinks(True)
         self.addWidget(bil_logo_label)
         self.addWidget(bil_info_label)
+
+
+class SpinnerLabel(QLabel):
+    def __init__(self):
+        super().__init__()
+        spinner_movie = abspath(__file__, "resources/loading.gif")
+        spinner = QMovie(spinner_movie)
+        spinner.setScaledSize(QSize(50, 50))
+        self.setMinimumSize(QSize(50, 50))
+        self.setMaximumSize(QSize(50, 50))
+        self.setMovie(spinner)
+        self.setHidden(True)
 
 
 def load_bil_swc(url, dataset):
