@@ -134,3 +134,7 @@ Split the plugin into 5 widgets:<br/>
 - Load Multiscale Data From URL
 - Load Neuron Morphology From URL
 - Layer Scale Controls
+
+<u>**v0.5.1:**</u>
+
+Add metadata link to curated datasets
