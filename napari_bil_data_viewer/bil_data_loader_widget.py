@@ -65,7 +65,7 @@ class LoadCuratedDatasets(QWidget):
         self.dataset_at_bil_label.setToolTip("view selected dataset on BIL website")
         self.metadata_label = QLabel(f'<a href="{self.metadata_url}" style="color:gray;">metadata</a>')
         self.metadata_label.setOpenExternalLinks(True)
-        self.metadata_label.setToolTip("view selected dataset on BIL website")
+        self.metadata_label.setToolTip("view metadata for selected dataset on BIL website")
         dataset_dropdown = QComboBox()
         dataset_dropdown.addItems(self.datasets)
         dataset_dropdown.setToolTip("summary fMOST datasets")
