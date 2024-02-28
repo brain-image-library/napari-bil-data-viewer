@@ -138,3 +138,7 @@ Split the plugin into 5 widgets:<br/>
 <u>**v0.5.1:**</u>
 
 Add metadata link to curated datasets
+
+<u>**v0.6.0:**</u>
+
+Add widget to visualize histology RGB tiffs
