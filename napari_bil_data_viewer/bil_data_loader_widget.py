@@ -701,6 +701,83 @@ class LoadNeuronMorphologyFromURL(QWidget):
         self.swc_url_input.setText("")
 
 
+class LoadHistologyImageFromURL(QWidget):
+    def __init__(self, napari_viewer):
+        super().__init__()
+        self.viewer = napari_viewer
+        self.example_url = "https://download.brainimagelibrary.org/ae/ad/aead64733884e4c6/pRF1sMBiF024d211023tNISSLnPuck_210218_08/pRF1sMBiF024d211023tNISSLnPuck_210218_08POST.tif"
+        self.spinner_label = SpinnerLabel()
+        self.init_ui()
+
+    def init_ui(self):
+        self.dataset_url_input = QLineEdit()
+        self.dataset_url_input.setPlaceholderText("paste URL")
+        self.dataset_url_input.setToolTip(f"example: {self.example_url}")
+        self.dataset_url_input.textChanged.connect(self.on_dataset_url_changed)
+        paste_example_url_label = QLabel('<a href="#" style="color:gray;">paste example URL</a>')
+        paste_example_url_label.linkActivated.connect(self._on_paste_example_url_clicked)
+        clear_label = QLabel('<a href="#" style="color:gray;">clear</a>')
+        clear_label.linkActivated.connect(self._on_clear_clicked)
+        dataset_url_label = QLabel("Load image (tif, tiff):")
+        self.load_button = QPushButton("Load Dataset")
+        self.load_button.clicked.connect(self.load_dataset)
+
+        # Loading indicator (spinner)
+        hbox_spinner = QHBoxLayout()
+        hbox_spinner.addWidget(self.spinner_label)
+
+        hbox_paste_example_url_label = QHBoxLayout()
+        hbox_paste_example_url_label.addWidget(clear_label)
+        hbox_paste_example_url_label.addWidget(paste_example_url_label)
+
+        vbox_main = QVBoxLayout()
+        vbox_main.addLayout(BILInfoHbox())
+        vbox_main.addItem(QSpacerItem(1, 25))
+        vbox_main.addWidget(dataset_url_label)
+        vbox_main.addLayout(hbox_spinner)
+        vbox_main.addWidget(self.dataset_url_input)
+        vbox_main.addLayout(hbox_paste_example_url_label)
+        vbox_main.addWidget(self.load_button)
+
+        self.setLayout(vbox_main)
+
+    def on_dataset_url_changed(self, value):
+        self.dataset_url = value
+
+    def load_dataset(self):
+
+        def _show_img(args):
+            data, meta, layer_type = args
+            self.viewer.add_image(data, **meta)
+            self.spinner_label.movie().stop()
+            self.spinner_label.setHidden(True)
+            self.load_button.setEnabled(True)
+
+        @thread_worker(connect={"returned": _show_img})
+        def _load_img():
+            dataset_info = {
+                'contrast_limits': [0, 255],
+                'scale': (1, 1),
+                'url': [
+                    self.dataset_url
+                ]
+            }
+            dataset_name = ''.join(random.choices(string.ascii_uppercase + string.ascii_lowercase + string.digits, k=10))
+            return load_single_image(dataset_info, dataset_name)
+
+        self.load_button.setEnabled(False)
+        self.spinner_label.setHidden(False)
+        self.spinner_label.movie().start()
+        _load_img()
+
+    def _on_paste_example_url_clicked(self):
+        self.dataset_url_input.setText(self.example_url)
+
+    def _on_clear_clicked(self):
+        self.dataset_url_input.setText("")
+
+
+
 def get_swc_files(dataset_name):
     from .fMOST_swc import swc_datasets
     swc_files = swc_datasets.get(dataset_name, [])
@@ -726,6 +803,12 @@ def getFilesHttp(url: str, ext: str) -> list:
     return files
 
 
+def getImage(fileObj):
+    with fileObj as f:
+        print('Reading {} \n'.format(f))
+        return io.imread(f)
+
+
 def load_bil_data(dataset_info, name):
     
     ''' 
@@ -739,12 +822,6 @@ def load_bil_data(dataset_info, name):
     bilData = dataset_info['url']
     supported_file_types = ['tif', 'tiff', 'jp2']
 
-    def getImage(fileObj):
-        with fileObj as f:
-            print('Reading {} \n'.format(f))
-            return io.imread(f)
-
-    
     data = []
     for data_url in bilData:
         for ext in supported_file_types:
@@ -780,6 +857,22 @@ def load_bil_data(dataset_info, name):
         }
 
     return (data,meta,'image')
+
+
+def load_single_image(dataset_info, name):
+    image = dataset_info['url'][0]
+    image = fsspec.open(image, 'rb')
+    if image.path.endswith('.tif') or image.path.endswith('.tiff'):
+        data = getImage(image)
+    else:
+        data = None
+    meta = {
+        'name': name,
+        'scale': dataset_info['scale'],
+        'multiscale': False,
+        'contrast_limits': dataset_info['contrast_limits']
+    }
+    return data, meta, 'image'
 
 
 class BILInfoHbox(QHBoxLayout):
@@ -876,4 +969,4 @@ def abspath(root, relpath):
 
 @napari_hook_implementation
 def napari_experimental_provide_dock_widget():
-    return [LoadCuratedDatasets, LoadImageStackFromURL, LoadMultiscaleDataFromURL, LoadNeuronMorphologyFromURL, LayerScaleControls]
+    return [LoadCuratedDatasets, LoadImageStackFromURL, LoadMultiscaleDataFromURL, LoadNeuronMorphologyFromURL, LayerScaleControls, LoadHistologyImageFromURL]
